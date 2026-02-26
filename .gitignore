@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+frontend/build/
+frontend/dist/
+*.egg-info/
+dist/
+build/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Data / outputs
+backend/data/outputs/
+backend/data/cache/
+*.tif
+*.geotiff
+*.nc
+
+# API keys — never commit these
+secrets.json
+api_keys.json

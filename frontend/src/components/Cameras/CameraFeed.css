@@ -1,0 +1,63 @@
+.camera-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.camera-card:hover {
+  border-color: #9c27b0;
+}
+
+.camera-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.camera-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.camera-network {
+  font-size: 0.7rem;
+  color: #9c27b0;
+  background: #1e1e3a;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.expand-icon {
+  color: #666;
+  font-size: 0.65rem;
+}
+
+.camera-feed-body {
+  border-top: 1px solid #2a2a4a;
+}
+
+.feed-placeholder {
+  background: #0f0f1a;
+  color: #555;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 30px 12px;
+}
+
+.camera-meta {
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  color: #888;
+  line-height: 1.8;
+}
+
+.camera-meta a {
+  color: #9c27b0;
+}

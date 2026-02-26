@@ -1,0 +1,132 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0f0f1a;
+}
+
+/* ─── Topbar ─────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a1a2e;
+  border-bottom: 1px solid #ff6b35;
+  padding: 0 16px;
+  height: 52px;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-brand h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ff6b35;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.fire-icon {
+  font-size: 1.4rem;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #aaa;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background: #ff6b35;
+  border-color: #ff6b35;
+  color: #fff;
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #555;
+}
+.status-dot.live {
+  background: #4caf50;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── Main Layout ────────────────────────────────── */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 340px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Map ────────────────────────────────────────── */
+.map-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Right Panel ────────────────────────────────── */
+.data-panel {
+  background: #12122a;
+  border-left: 1px solid #2a2a4a;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Shared panel styles ────────────────────────── */
+.panel-header {
+  padding: 14px 16px;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a4a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff6b35;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-body {
+  padding: 12px;
+  flex: 1;
+}
+
+.placeholder {
+  color: #555;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 40px 16px;
+  line-height: 1.6;
+}

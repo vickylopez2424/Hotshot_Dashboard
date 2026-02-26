@@ -1,0 +1,53 @@
+.station-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.filter-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #2a2a4a;
+  color: #aaa;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background: #00bcd4;
+  border-color: #00bcd4;
+  color: #fff;
+}
+
+.station-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.station-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 2px;
+}
+
+.station-type {
+  font-size: 0.65rem;
+  color: #00bcd4;
+  margin-bottom: 8px;
+}
+
+.station-readings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #aaa;
+}

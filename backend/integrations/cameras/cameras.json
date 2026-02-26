@@ -1,0 +1,13 @@
+[
+  {
+    "camera_id": "example-cam-001",
+    "name": "Example ALERTWildfire Camera",
+    "network": "ALERTWildfire",
+    "location": "Example Location, CA",
+    "latitude": 37.5,
+    "longitude": -119.5,
+    "stream_url": "https://cameras.alertwildfire.org/",
+    "embed_url": null,
+    "notes": "Replace with real camera entries from alertwildfire.org"
+  }
+]

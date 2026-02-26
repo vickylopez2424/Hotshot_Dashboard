@@ -1,0 +1,60 @@
+.sidebar {
+  background: #12122a;
+  border-right: 1px solid #2a2a4a;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 14px 16px;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a4a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ff6b35;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.layer-list {
+  list-style: none;
+  padding: 8px 0;
+}
+
+.layer-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #ddd;
+}
+
+.layer-toggle input[type="checkbox"] {
+  accent-color: #ff6b35;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.layer-icon {
+  font-size: 1rem;
+}
+
+.layer-label {
+  font-weight: 500;
+}
+
+.layer-desc {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 4px;
+  margin-left: 22px;
+  line-height: 1.4;
+}
