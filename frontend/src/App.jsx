@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import './App.css';
 import MapView from './components/Map/MapView';
 import CameraPanel from './components/Cameras/CameraPanel';
@@ -10,6 +10,10 @@ import { PLATFORMS } from './config/platforms';
 
 function App() {
   const [activePanel, setActivePanel] = useState('cameras');
+
+  // Shared ELMFIRE time state — panel controls it, map layer reads it
+  const [elmfireTime, setElmfireTime] = useState(null);
+  const handleElmfireTimeChange = useCallback((t) => setElmfireTime(t), []);
 
   return (
     <PlatformProvider>
@@ -41,15 +45,17 @@ function App() {
           {/* Left sidebar: layer controls */}
           <Sidebar />
 
-          {/* Center: interactive map */}
+          {/* Center: interactive map — receives elmfireTime for animation */}
           <section className="map-section">
-            <MapView />
+            <MapView elmfireTime={elmfireTime} />
           </section>
 
           {/* Right panel: platform-specific data */}
           <aside className="data-panel">
             {activePanel === 'cameras'    && <CameraPanel />}
-            {activePanel === 'elmfire'    && <ElmfirePanel />}
+            {activePanel === 'elmfire'    && (
+              <ElmfirePanel onTimeChange={handleElmfireTimeChange} />
+            )}
             {activePanel === 'wims'       && <WimsPanel />}
             {/* Additional panels added here as platforms expand */}
           </aside>

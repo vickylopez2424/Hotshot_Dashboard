@@ -7,11 +7,11 @@ import WimsLayer from './layers/WimsLayer';
 import CameraMarkerLayer from './layers/CameraMarkerLayer';
 import { usePlatform } from '../../context/PlatformContext';
 
-// Default center: continental US
-const DEFAULT_CENTER = [37.5, -119.5];
-const DEFAULT_ZOOM = 6;
+// Default center: Northern California (ELMFIRE sample run area)
+const DEFAULT_CENTER = [38.9, -120.5];
+const DEFAULT_ZOOM = 8;
 
-function MapView() {
+function MapView({ elmfireTime }) {
   const { isLayerActive } = usePlatform();
 
   return (
@@ -46,7 +46,9 @@ function MapView() {
 
       {/* Platform overlay layers — each controlled by sidebar toggles */}
       {isLayerActive('firms')   && <ActiveFireLayer />}
-      {isLayerActive('elmfire') && <ElmfireLayer />}
+      {isLayerActive('elmfire') && (
+        <ElmfireLayer currentTimeMinutes={elmfireTime} />
+      )}
       {isLayerActive('wims')    && <WimsLayer />}
       {isLayerActive('cameras') && <CameraMarkerLayer />}
 
