@@ -11,8 +11,11 @@ load_dotenv()
 FIRMS_API_KEY = os.getenv("FIRMS_API_KEY", "")
 FIRMS_BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api"
 
-# ─── WIMS ────────────────────────────────────────────────
-WIMS_BASE_URL = "https://www.wcc.nrcs.usda.gov/webwims"
+# ─── WIMS / RAWS (Synoptic Data API) ─────────────────────
+# Get a free token at: https://synopticdata.com/
+SYNOPTIC_API_KEY = os.getenv("SYNOPTIC_API_KEY", "")
+SYNOPTIC_BASE_URL = "https://api.synopticdata.com/v2"
+WIMS_CACHE_TTL = int(os.getenv("WIMS_CACHE_TTL", "900"))  # seconds (15 min default)
 
 # ─── ALERTWildfire ────────────────────────────────────────
 ALERTWILDFIRE_BASE_URL = "https://cameras.alertwildfire.org"

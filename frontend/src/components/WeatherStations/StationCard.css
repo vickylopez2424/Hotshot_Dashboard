@@ -1,0 +1,76 @@
+.station-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-left: 4px solid #888;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+
+.station-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.station-card-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.station-card-meta {
+  font-size: 0.68rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.danger-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.station-readings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+
+.reading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+}
+
+.reading-icon {
+  font-size: 0.8rem;
+  width: 16px;
+  text-align: center;
+}
+
+.reading-label {
+  color: #777;
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.reading-value {
+  color: #ccc;
+  font-weight: 500;
+}
+
+.station-obs-time {
+  font-size: 0.65rem;
+  color: #555;
+  margin-top: 8px;
+  border-top: 1px solid #1e1e3a;
+  padding-top: 6px;
+}
