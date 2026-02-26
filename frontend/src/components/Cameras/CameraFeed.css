@@ -1,63 +1,148 @@
 .camera-card {
   background: #1a1a2e;
   border: 1px solid #2a2a4a;
+  border-left: 3px solid #9c27b0;
   border-radius: 6px;
   margin-bottom: 8px;
   overflow: hidden;
   transition: border-color 0.2s;
 }
 
-.camera-card:hover {
-  border-color: #9c27b0;
-}
+.camera-card:hover { border-color: #3a3a5a; }
+.camera-card.expanded { border-color: #4a4a6a; }
 
+/* ─── Header ─────────────────────────────────────── */
 .camera-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 10px 12px;
   cursor: pointer;
-  gap: 6px;
+  gap: 8px;
+}
+
+.camera-header:hover { background: rgba(255,255,255,0.02); }
+
+.camera-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.camera-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: livepulse 2.5s infinite;
+}
+
+@keyframes livepulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
 }
 
 .camera-name {
-  flex: 1;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.camera-network {
-  font-size: 0.7rem;
-  color: #9c27b0;
-  background: #1e1e3a;
-  padding: 2px 6px;
-  border-radius: 10px;
+.camera-sub {
+  font-size: 0.66rem;
+  color: #777;
+  margin-top: 1px;
 }
 
-.expand-icon {
-  color: #666;
+.expand-chevron {
+  color: #555;
   font-size: 0.65rem;
+  flex-shrink: 0;
 }
 
-.camera-feed-body {
+/* ─── Expanded body ──────────────────────────────── */
+.camera-body {
   border-top: 1px solid #2a2a4a;
 }
 
-.feed-placeholder {
-  background: #0f0f1a;
+/* ─── Stream ─────────────────────────────────────── */
+.stream-container {
+  background: #0a0a14;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.stream-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.stream-loading {
   color: #555;
   font-size: 0.75rem;
   text-align: center;
-  padding: 30px 12px;
 }
 
-.camera-meta {
-  padding: 8px 12px;
-  font-size: 0.72rem;
-  color: #888;
+.stream-error {
+  text-align: center;
+  padding: 20px;
+  color: #555;
+  font-size: 0.78rem;
   line-height: 1.8;
 }
 
-.camera-meta a {
-  color: #9c27b0;
+.stream-error-icon { font-size: 2rem; margin-bottom: 8px; }
+
+.stream-error-sub {
+  font-size: 0.68rem;
+  color: #444;
+  margin-top: 4px;
+}
+
+/* ─── Metadata row ───────────────────────────────── */
+.camera-meta-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 0.7rem;
+  color: #666;
+  border-bottom: 1px solid #1e1e3a;
+  flex-wrap: wrap;
+}
+
+/* ─── Actions ────────────────────────────────────── */
+.camera-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.camera-link {
+  font-size: 0.72rem;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid #2a2a4a;
+  color: #888;
+  transition: all 0.15s;
+}
+
+.camera-link:hover { opacity: 0.8; }
+
+.camera-link.primary {
+  font-weight: 600;
+  border-width: 1px;
 }

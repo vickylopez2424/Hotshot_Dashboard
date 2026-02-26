@@ -1,0 +1,123 @@
+.camera-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Controls ───────────────────────────────────── */
+.camera-controls {
+  display: flex;
+  gap: 5px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  align-items: center;
+}
+
+.cam-select {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.cam-select:first-child { width: 72px;  flex-shrink: 0; }
+.network-select         { flex: 1; min-width: 0; }
+
+.cam-refresh {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.cam-refresh:hover:not(:disabled) { border-color: #9c27b0; color: #9c27b0; }
+
+/* ─── Search + capability toggles ───────────────── */
+.camera-search-row {
+  display: flex;
+  gap: 6px;
+  padding: 7px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  align-items: center;
+}
+
+.cam-search {
+  flex: 1;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  outline: none;
+  min-width: 0;
+}
+
+.cam-search::placeholder { color: #555; }
+.cam-search:focus { border-color: #9c27b0; }
+
+.cap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #888;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.cap-toggle input { display: none; }
+.cap-toggle.on    { background: #1e0a2a; border-color: #9c27b0; color: #ce93d8; }
+
+/* ─── Count banner ───────────────────────────────── */
+.camera-count-bar {
+  font-size: 0.68rem;
+  color: #666;
+  padding: 5px 12px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+/* ─── List ───────────────────────────────────────── */
+.camera-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.cam-error {
+  background: #1e1010;
+  border: 1px solid #5a1a1a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #ff8080;
+  margin-bottom: 8px;
+}
+
+.load-more-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed #2a2a4a;
+  color: #666;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+
+.load-more-btn:hover { border-color: #9c27b0; color: #9c27b0; }
