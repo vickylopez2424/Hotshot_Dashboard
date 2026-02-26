@@ -5,13 +5,14 @@ import ActiveFireLayer from './layers/ActiveFireLayer';
 import ElmfireLayer from './layers/ElmfireLayer';
 import WimsLayer from './layers/WimsLayer';
 import CameraMarkerLayer from './layers/CameraMarkerLayer';
+import WildcadLayer from './layers/WildcadLayer';
 import { usePlatform } from '../../context/PlatformContext';
 
 // Default center: Northern California (ELMFIRE sample run area)
 const DEFAULT_CENTER = [38.9, -120.5];
 const DEFAULT_ZOOM = 8;
 
-function MapView({ elmfireTime }) {
+function MapView({ elmfireTime, selectedIncident }) {
   const { isLayerActive } = usePlatform();
 
   return (
@@ -51,6 +52,7 @@ function MapView({ elmfireTime }) {
       )}
       {isLayerActive('wims')    && <WimsLayer />}
       {isLayerActive('cameras') && <CameraMarkerLayer />}
+      {isLayerActive('wildcad') && <WildcadLayer />}
 
       {/* Add new platform layers here as platforms are integrated */}
     </MapContainer>

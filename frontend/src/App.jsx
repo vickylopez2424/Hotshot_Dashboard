@@ -4,6 +4,7 @@ import MapView from './components/Map/MapView';
 import CameraPanel from './components/Cameras/CameraPanel';
 import ElmfirePanel from './components/Elmfire/ElmfirePanel';
 import WimsPanel from './components/WeatherStations/WimsPanel';
+import WildcadPanel from './components/Wildcad/WildcadPanel';
 import Sidebar from './components/Sidebar/Sidebar';
 import { PlatformProvider } from './context/PlatformContext';
 import { PLATFORMS } from './config/platforms';
@@ -13,6 +14,9 @@ function App() {
 
   // Shared ELMFIRE time state — panel controls it, map layer reads it
   const [elmfireTime, setElmfireTime] = useState(null);
+
+  // Selected WildCAD incident — panel selection flies map to incident
+  const [selectedIncident, setSelectedIncident] = useState(null);
   const handleElmfireTimeChange = useCallback((t) => setElmfireTime(t), []);
 
   return (
@@ -57,6 +61,9 @@ function App() {
               <ElmfirePanel onTimeChange={handleElmfireTimeChange} />
             )}
             {activePanel === 'wims'       && <WimsPanel />}
+            {activePanel === 'wildcad'    && (
+              <WildcadPanel onIncidentSelect={setSelectedIncident} />
+            )}
             {/* Additional panels added here as platforms expand */}
           </aside>
         </main>

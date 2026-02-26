@@ -1,0 +1,145 @@
+.trends-panel {
+  padding: 0;
+}
+
+/* ─── Stat cards ─────────────────────────────────── */
+.stat-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.stat-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.stat-card-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.stat-card-label {
+  font-size: 0.62rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.stat-card-sub {
+  font-size: 0.62rem;
+  color: #555;
+  margin-top: 2px;
+}
+
+/* ─── Chart containers ───────────────────────────── */
+.chart-container {
+  padding: 12px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.chart-title {
+  font-size: 0.72rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+/* ─── Vertical bar chart ─────────────────────────── */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 80px;
+}
+
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  transition: height 0.3s;
+}
+
+.bar-label {
+  font-size: 0.58rem;
+  color: #666;
+  margin-top: 3px;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-value {
+  font-size: 0.6rem;
+  color: #888;
+  text-align: center;
+}
+
+/* ─── Horizontal bar chart ───────────────────────── */
+.horiz-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.horiz-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.horiz-label {
+  font-size: 0.7rem;
+  color: #aaa;
+  width: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.horiz-track {
+  flex: 1;
+  height: 8px;
+  background: #1e1e3a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.horiz-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.horiz-value {
+  font-size: 0.68rem;
+  color: #888;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}

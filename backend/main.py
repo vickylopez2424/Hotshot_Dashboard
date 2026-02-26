@@ -12,6 +12,7 @@ from integrations.elmfire.connector import router as elmfire_router
 from integrations.cameras.connector import router as cameras_router
 from integrations.wims.connector import router as wims_router
 from integrations.rx_weather.connector import router as rx_weather_router
+from integrations.wildcad.connector import router as wildcad_router
 
 app = FastAPI(
     title="Hotshot Dashboard API",
@@ -35,6 +36,7 @@ app.include_router(elmfire_router,    prefix="/api/elmfire",    tags=["ELMFIRE"]
 app.include_router(cameras_router,    prefix="/api/cameras",    tags=["Cameras"])
 app.include_router(wims_router,       prefix="/api/wims",       tags=["WIMS"])
 app.include_router(rx_weather_router, prefix="/api/rx_weather", tags=["Rx Weather"])
+app.include_router(wildcad_router,    prefix="/api/wildcad",    tags=["WildCAD"])
 
 # ─── Add new platforms below ─────────────────────────────
 # from integrations.my_platform.connector import router as my_platform_router
@@ -56,5 +58,6 @@ def list_platforms():
             {"id": "cameras",    "label": "ALERTWildfire",    "status": "stub"},
             {"id": "wims",       "label": "WIMS/RAWS",        "status": "stub"},
             {"id": "rx_weather", "label": "Rx Fire Weather",  "status": "stub"},
+            {"id": "wildcad",    "label": "WildCAD / IRWIN",  "status": "active"},
         ]
     }

@@ -58,6 +58,15 @@ export const PLATFORMS = [
     apiBase: '/api/rx_weather',
     description: 'Prescribed burn weather station data',
   },
+  {
+    id: 'wildcad',
+    label: 'WildCAD',
+    icon: '🚒',
+    enabled: true,
+    mapLayer: true,
+    apiBase: '/api/wildcad',
+    description: 'Active fire incidents + dispatch data (NIFC IRWIN)',
+  },
   // ─── Add new platforms below ───────────────────────
   // {
   //   id: 'my_platform',

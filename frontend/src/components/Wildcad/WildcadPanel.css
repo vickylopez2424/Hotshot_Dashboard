@@ -1,0 +1,180 @@
+.wildcad-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Tabs ───────────────────────────────────────── */
+.wildcad-tabs {
+  display: flex;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #777;
+  padding: 9px 4px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover { color: #ddd; }
+.tab-btn.active {
+  color: #ff6b35;
+  border-bottom-color: #ff6b35;
+  font-weight: 600;
+}
+
+/* ─── Controls ───────────────────────────────────── */
+.wildcad-controls {
+  display: flex;
+  gap: 5px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  align-items: center;
+}
+
+.state-select,
+.sort-select {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.state-select { width: 72px; flex-shrink: 0; }
+.sort-select  { width: 90px; flex-shrink: 0; }
+
+.search-input {
+  flex: 1;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  outline: none;
+  min-width: 0;
+}
+
+.search-input::placeholder { color: #555; }
+.search-input:focus { border-color: #ff6b35; }
+
+.refresh-btn {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.refresh-btn:hover:not(:disabled) { border-color: #ff6b35; color: #ff6b35; }
+.refresh-btn:disabled              { opacity: 0.4; cursor: default; }
+
+/* ─── Summary chips ──────────────────────────────── */
+.incident-summary {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  flex-wrap: wrap;
+}
+
+.summary-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.summary-chip.active     { background: #3a1010; color: #e53935; }
+.summary-chip.contained  { background: #103a10; color: #4caf50; }
+.summary-chip.personnel  { background: #1a1a10; color: #ff9800; }
+
+/* ─── Lists ──────────────────────────────────────── */
+.wildcad-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.wildcad-error {
+  background: #1e1010;
+  border: 1px solid #5a1a1a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #ff8080;
+}
+
+/* ─── Dispatch tab ───────────────────────────────── */
+.dispatch-tab {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.dispatch-input-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.dispatch-hint {
+  font-size: 0.7rem;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.dispatch-hint a { color: #ff6b35; }
+
+.dispatch-meta {
+  font-size: 0.7rem;
+  color: #666;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.dispatch-row {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.dispatch-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #eee;
+  margin-bottom: 4px;
+}
+
+.dispatch-detail {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin-bottom: 3px;
+}
+
+.dispatch-resources {
+  font-size: 0.7rem;
+  color: #ff9800;
+  margin-bottom: 2px;
+}
+
+.dispatch-time {
+  font-size: 0.66rem;
+  color: #666;
+}

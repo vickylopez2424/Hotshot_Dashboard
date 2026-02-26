@@ -5,6 +5,10 @@ python-dotenv==1.0.0
 requests==2.31.0
 websockets==12.0
 
+# ── WildCAD HTML scraping ────────────────────────────────────────────────────
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
 # ── Geospatial (ELMFIRE GeoTIFF processing) ──────────────────────────────────
 rasterio==1.3.9
 geopandas==0.14.2

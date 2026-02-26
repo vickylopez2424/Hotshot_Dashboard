@@ -1,0 +1,98 @@
+.incident-card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-left: 4px solid #e53935;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.incident-card:hover  { background: #1e1e3a; }
+.incident-card.selected { background: #1e1e40; box-shadow: 0 0 0 1px #ff6b35; }
+
+.incident-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.incident-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #eee;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.incident-size {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ff9800;
+  white-space: nowrap;
+}
+
+.incident-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: #777;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.incident-cause {
+  color: #aaa;
+  font-style: italic;
+}
+
+.incident-stats {
+  display: flex;
+  gap: 0;
+  margin-bottom: 6px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid #2a2a4a;
+  padding: 2px 0;
+}
+
+.stat:last-child { border-right: none; }
+
+.stat-val {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ddd;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.62rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.incident-dispatch {
+  font-size: 0.68rem;
+  color: #666;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.containment-bar {
+  height: 3px;
+  background: #2a2a4a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.containment-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
