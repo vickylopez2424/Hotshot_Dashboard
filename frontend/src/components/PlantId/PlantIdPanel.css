@@ -1,0 +1,83 @@
+.plantid-panel { padding: 1rem; color: #e6edf3; }
+
+.pid-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; }
+.panel-icon { font-size: 1.5rem; }
+.pid-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.pid-header p  { margin: 0; font-size: 0.8rem; color: #8b949e; }
+
+/* Drop zone */
+.pid-dropzone {
+  border: 2px dashed #30363d; border-radius: 10px;
+  padding: 2rem 1rem; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s; margin-bottom: 1rem;
+}
+.pid-dropzone:hover, .pid-dropzone.drag-over {
+  border-color: #3aa76d; background: rgba(58,167,109,0.05);
+}
+.dz-icon  { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+.dz-main  { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.4rem; }
+.dz-sub   { font-size: 0.8rem; color: #6e7681; margin: 0; line-height: 1.5; }
+
+.pid-preview-row { position: relative; margin-bottom: 1rem; }
+.pid-preview-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; display: block; }
+.btn-clear {
+  position: absolute; top: 0.5rem; right: 0.5rem;
+  background: rgba(13,17,23,0.85); border: 1px solid #30363d; border-radius: 5px;
+  color: #e6edf3; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer;
+}
+
+.pid-error { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.4); border-radius: 6px; padding: 0.6rem 0.75rem; font-size: 0.875rem; color: #f85149; margin-bottom: 0.75rem; }
+
+.pid-loading { display: flex; align-items: center; gap: 0.75rem; color: #8b949e; font-size: 0.875rem; padding: 1rem 0; }
+.pid-spinner { width: 18px; height: 18px; border: 2px solid #30363d; border-top-color: #3aa76d; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Fire alert card */
+.fire-alert {
+  border: 1px solid; border-radius: 8px; padding: 0.875rem;
+  margin-bottom: 1rem; background: rgba(22,27,34,0.8);
+}
+.fire-risk-badge {
+  display: inline-block; color: #fff; border-radius: 4px;
+  padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 800;
+  letter-spacing: 0.05em; margin-bottom: 0.5rem;
+}
+.fire-fuel-model { font-size: 0.875rem; margin-bottom: 0.2rem; }
+.fire-season     { font-size: 0.8rem; color: #8b949e; margin-bottom: 0.2rem; }
+.fire-invasive   { font-size: 0.8rem; color: #e05c2a; font-weight: 600; margin-bottom: 0.4rem; }
+.fire-notes      { font-size: 0.8rem; color: #8b949e; line-height: 1.55; margin-top: 0.4rem; border-top: 1px solid #21262d; padding-top: 0.5rem; }
+
+/* Results */
+.pid-section-title { font-size: 0.75rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem; }
+
+.species-card {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: #161b22; border: 1px solid #21262d; border-radius: 7px;
+  padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; position: relative;
+}
+.species-card.top-match { border-color: #3aa76d; }
+
+.species-thumb { width: 48px; height: 48px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+.species-info  { flex: 1; min-width: 0; }
+.species-score { font-size: 0.7rem; color: #6e7681; margin-bottom: 0.1rem; }
+.species-name  { font-size: 0.85rem; font-weight: 600; font-style: italic; }
+.species-common{ font-size: 0.8rem; color: #8b949e; }
+.species-fire-badge {
+  display: inline-block; border: 1px solid; border-radius: 3px;
+  padding: 0.1rem 0.4rem; font-size: 0.7rem; font-weight: 600; margin-top: 0.2rem;
+}
+.species-no-fire { font-size: 0.75rem; color: #6e7681; margin-top: 0.2rem; }
+
+.species-link {
+  font-size: 0.8rem; color: #79c0ff; text-decoration: none;
+  flex-shrink: 0; padding: 0 0.25rem;
+}
+
+.pid-attribution { font-size: 0.75rem; color: #6e7681; margin-top: 0.75rem; }
+.pid-attribution a { color: #79c0ff; text-decoration: none; }
+
+/* Examples */
+.pid-examples { margin-top: 1rem; }
+.pid-examples h3 { font-size: 0.75rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.6rem; }
+.example-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.example-item { background: #161b22; border: 1px solid #21262d; border-radius: 5px; padding: 0.5rem 0.6rem; font-size: 0.8rem; color: #8b949e; }

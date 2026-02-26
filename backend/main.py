@@ -17,6 +17,9 @@ from integrations.wildcad.connector import router as wildcad_router
 from integrations.nws_fire.connector import router as nws_router
 from integrations.airnow.connector import router as airnow_router
 from integrations.watchduty.connector import router as watchduty_router
+from integrations.landfire.connector import router as landfire_router
+from integrations.plant_id.connector import router as plant_id_router
+from integrations.vegetation.connector import router as vegetation_router
 from integrations.admin.connector import router as admin_router
 
 app = FastAPI(
@@ -47,6 +50,9 @@ app.include_router(wildcad_router,    prefix="/api/wildcad",    tags=["WildCAD"]
 app.include_router(nws_router,        prefix="/api/nws",        tags=["NWS Fire"],   dependencies=_auth)
 app.include_router(airnow_router,     prefix="/api/airnow",     tags=["AirNow"],     dependencies=_auth)
 app.include_router(watchduty_router,  prefix="/api/watchduty",  tags=["Watch Duty"], dependencies=_auth)
+app.include_router(landfire_router,   prefix="/api/landfire",   tags=["LANDFIRE"],   dependencies=_auth)
+app.include_router(plant_id_router,   prefix="/api/plant-id",   tags=["Plant ID"],   dependencies=_auth)
+app.include_router(vegetation_router, prefix="/api/vegetation",  tags=["Vegetation"], dependencies=_auth)
 
 # Admin endpoints — each route internally requires role='admin'
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])

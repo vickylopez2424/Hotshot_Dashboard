@@ -1,0 +1,56 @@
+.landfire-panel { padding: 1rem; color: #e6edf3; }
+
+.lf-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; }
+.panel-icon { font-size: 1.5rem; }
+.lf-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.lf-header p  { margin: 0; font-size: 0.8rem; color: #8b949e; }
+
+.lf-section { margin-bottom: 1.25rem; }
+.lf-section h3 {
+  font-size: 0.75rem; font-weight: 600; color: #8b949e;
+  text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.6rem;
+}
+
+.lf-layer-list { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.lf-layer-btn {
+  background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+  padding: 0.6rem 0.75rem; text-align: left; cursor: pointer;
+  color: #e6edf3; transition: border-color 0.15s;
+  display: flex; flex-direction: column; gap: 0.15rem;
+}
+.lf-layer-btn:hover  { border-color: #8b949e; }
+.lf-layer-btn.active { border-color: #3aa76d; background: rgba(58,167,109,0.08); }
+
+.lf-layer-name { font-size: 0.875rem; font-weight: 600; }
+.lf-layer-desc { font-size: 0.75rem; color: #8b949e; line-height: 1.4; }
+
+.lf-slider {
+  width: 100%; accent-color: #3aa76d; height: 4px;
+  background: #30363d; border-radius: 2px; cursor: pointer;
+}
+
+.lf-query-hint {
+  display: flex; gap: 0.5rem; background: rgba(139,148,158,0.07);
+  border: 1px solid #21262d; border-radius: 6px; padding: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+.lf-query-hint span { font-size: 1rem; flex-shrink: 0; }
+.lf-query-hint p { margin: 0; font-size: 0.78rem; color: #6e7681; line-height: 1.4; }
+
+.lf-loading { text-align: center; color: #6e7681; padding: 0.75rem; font-size: 0.875rem; }
+
+.lf-query-result {
+  background: #161b22; border: 1px solid #3aa76d;
+  border-radius: 8px; padding: 0.875rem; margin-bottom: 1rem;
+}
+.lf-query-result h3 { font-size: 0.75rem; color: #8b949e; margin: 0 0 0.6rem; font-weight: 600; }
+
+.lf-fuel-card { display: flex; flex-direction: column; gap: 0.2rem; }
+.fuel-code  { font-size: 1.5rem; font-weight: 800; color: #3aa76d; }
+.fuel-name  { font-size: 0.875rem; color: #e6edf3; line-height: 1.4; }
+.fuel-risk  { font-size: 0.8rem; font-weight: 700; margin-top: 0.15rem; }
+.lf-error   { font-size: 0.8rem; color: #f85149; }
+
+.lf-attribution { font-size: 0.75rem; color: #6e7681; margin-top: 0.5rem; }
+.lf-attribution a { color: #79c0ff; text-decoration: none; }

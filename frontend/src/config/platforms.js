@@ -94,6 +94,33 @@ export const PLATFORMS = [
     apiBase: '/api/watchduty',
     description: 'Watch Duty community wildfire alerts and links',
   },
+  {
+    id: 'landfire',
+    label: 'LANDFIRE',
+    icon: '🌿',
+    enabled: true,
+    mapLayer: true,
+    apiBase: '/api/landfire',
+    description: 'USDA/USDI vegetation and fire behavior fuel models (30m)',
+  },
+  {
+    id: 'plant_id',
+    label: 'Plant ID',
+    icon: '🌱',
+    enabled: true,
+    mapLayer: false,
+    apiBase: '/api/plant-id',
+    description: 'AI plant identification with fire behavior lookup',
+  },
+  {
+    id: 'vegetation',
+    label: 'Vegetation',
+    icon: '🛰️',
+    enabled: true,
+    mapLayer: true,
+    apiBase: '/api/vegetation',
+    description: 'NASA MODIS NDVI vegetation stress analysis',
+  },
   // ─── Add new platforms below ───────────────────────
 ];
 

@@ -9,6 +9,9 @@ import FirmsPanel from './components/Firms/FirmsPanel';
 import NWSPanel from './components/NWSFire/NWSPanel';
 import AirNowPanel from './components/AirNow/AirNowPanel';
 import WatchdutyPanel from './components/Watchduty/WatchdutyPanel';
+import LandfirePanel from './components/Landfire/LandfirePanel';
+import PlantIdPanel from './components/PlantId/PlantIdPanel';
+import VegetationPanel from './components/Vegetation/VegetationPanel';
 import Sidebar from './components/Sidebar/Sidebar';
 import { PlatformProvider } from './context/PlatformContext';
 import { PLATFORMS } from './config/platforms';
@@ -18,6 +21,14 @@ function App() {
 
   // Shared ELMFIRE time state — panel controls it, map layer reads it
   const [elmfireTime, setElmfireTime] = useState(null);
+
+  // LANDFIRE layer state — panel controls which layer + opacity the map shows
+  const [landfireLayer,   setLandfireLayer]   = useState('US_220FBFM40');
+  const [landfireOpacity, setLandfireOpacity] = useState(0.7);
+
+  // Vegetation layer state
+  const [vegetationLayer,   setVegetationLayer]   = useState('MOD13A2_006_NDVI');
+  const [vegetationOpacity, setVegetationOpacity] = useState(0.65);
 
   // Selected WildCAD incident — panel selection flies map to incident
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -53,9 +64,15 @@ function App() {
           {/* Left sidebar: layer controls */}
           <Sidebar />
 
-          {/* Center: interactive map — receives elmfireTime for animation */}
+          {/* Center: interactive map */}
           <section className="map-section">
-            <MapView elmfireTime={elmfireTime} />
+            <MapView
+              elmfireTime={elmfireTime}
+              landfireLayer={landfireLayer}
+              landfireOpacity={landfireOpacity}
+              vegetationLayer={vegetationLayer}
+              vegetationOpacity={vegetationOpacity}
+            />
           </section>
 
           {/* Right panel: platform-specific data */}
@@ -72,6 +89,19 @@ function App() {
             {activePanel === 'nws'        && <NWSPanel />}
             {activePanel === 'airnow'     && <AirNowPanel />}
             {activePanel === 'watchduty'  && <WatchdutyPanel />}
+            {activePanel === 'landfire'   && (
+              <LandfirePanel
+                onLayerChange={setLandfireLayer}
+                onOpacityChange={setLandfireOpacity}
+              />
+            )}
+            {activePanel === 'plant_id'   && <PlantIdPanel />}
+            {activePanel === 'vegetation' && (
+              <VegetationPanel
+                onLayerChange={setVegetationLayer}
+                onOpacityChange={setVegetationOpacity}
+              />
+            )}
             {/* Additional panels added here as platforms expand */}
           </aside>
         </main>

@@ -5,6 +5,7 @@ python-dotenv==1.0.0
 requests==2.31.0
 websockets==12.0
 PyJWT==2.8.0
+python-multipart==0.0.9
 
 # ── WildCAD HTML scraping ────────────────────────────────────────────────────
 beautifulsoup4==4.12.3
