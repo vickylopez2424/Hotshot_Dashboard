@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: hotshot-dashboard-api
+    env: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FIRMS_API_KEY
+        sync: false
+      - key: SYNOPTIC_API_KEY
+        sync: false
+      - key: ELMFIRE_OUTPUT_DIR
+        value: ./data/elmfire_outputs
+      - key: CORS_ORIGINS
+        sync: false   # Set to your Vercel frontend URL in Render dashboard

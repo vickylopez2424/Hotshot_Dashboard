@@ -2,9 +2,10 @@
 Hotshot Dashboard — FastAPI Backend
 Aggregates data from all wildfire platform integrations.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from config import CORS_ORIGINS
+from auth import get_approved_user
 
 # Platform routers
 from integrations.firms.connector import router as firms_router
@@ -13,6 +14,7 @@ from integrations.cameras.connector import router as cameras_router
 from integrations.wims.connector import router as wims_router
 from integrations.rx_weather.connector import router as rx_weather_router
 from integrations.wildcad.connector import router as wildcad_router
+from integrations.admin.connector import router as admin_router
 
 app = FastAPI(
     title="Hotshot Dashboard API",
@@ -30,17 +32,22 @@ app.add_middleware(
 
 # ─── Register platform routers ───────────────────────────
 # Each platform is a self-contained router under /api/<platform>
-# Add new platforms by creating an integration and mounting it here.
-app.include_router(firms_router,      prefix="/api/firms",      tags=["FIRMS"])
-app.include_router(elmfire_router,    prefix="/api/elmfire",    tags=["ELMFIRE"])
-app.include_router(cameras_router,    prefix="/api/cameras",    tags=["Cameras"])
-app.include_router(wims_router,       prefix="/api/wims",       tags=["WIMS"])
-app.include_router(rx_weather_router, prefix="/api/rx_weather", tags=["Rx Weather"])
-app.include_router(wildcad_router,    prefix="/api/wildcad",    tags=["WildCAD"])
+# All platform routes require an approved user account.
+_auth = [Depends(get_approved_user)]
+
+app.include_router(firms_router,      prefix="/api/firms",      tags=["FIRMS"],      dependencies=_auth)
+app.include_router(elmfire_router,    prefix="/api/elmfire",    tags=["ELMFIRE"],    dependencies=_auth)
+app.include_router(cameras_router,    prefix="/api/cameras",    tags=["Cameras"],    dependencies=_auth)
+app.include_router(wims_router,       prefix="/api/wims",       tags=["WIMS"],       dependencies=_auth)
+app.include_router(rx_weather_router, prefix="/api/rx_weather", tags=["Rx Weather"], dependencies=_auth)
+app.include_router(wildcad_router,    prefix="/api/wildcad",    tags=["WildCAD"],    dependencies=_auth)
+
+# Admin endpoints — each route internally requires role='admin'
+app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 
 # ─── Add new platforms below ─────────────────────────────
 # from integrations.my_platform.connector import router as my_platform_router
-# app.include_router(my_platform_router, prefix="/api/my_platform", tags=["My Platform"])
+# app.include_router(my_platform_router, prefix="/api/my_platform", tags=["My Platform"], dependencies=_auth)
 
 
 @app.get("/api/health")

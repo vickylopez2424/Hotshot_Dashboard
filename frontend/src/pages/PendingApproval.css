@@ -1,0 +1,89 @@
+.pending-page {
+  min-height: 100vh;
+  background: #0d1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.pending-card {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+  color: #e6edf3;
+}
+
+.pending-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pending-card h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.pending-card p {
+  font-size: 0.95rem;
+  color: #8b949e;
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+}
+
+.pending-email {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  color: #8b949e;
+  margin-bottom: 1.5rem;
+}
+.pending-email strong { color: #e6edf3; }
+
+.pending-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-check {
+  background: #e05c2a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-check:hover { background: #c94e1f; }
+
+.btn-signout {
+  background: transparent;
+  color: #8b949e;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-signout:hover { color: #e6edf3; border-color: #8b949e; }
+
+.pending-note {
+  font-size: 0.8rem;
+  color: #6e7681;
+}
+.pending-note a { color: #79c0ff; text-decoration: none; }
+.pending-note a:hover { text-decoration: underline; }
