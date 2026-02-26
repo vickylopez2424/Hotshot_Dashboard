@@ -14,6 +14,9 @@ from integrations.cameras.connector import router as cameras_router
 from integrations.wims.connector import router as wims_router
 from integrations.rx_weather.connector import router as rx_weather_router
 from integrations.wildcad.connector import router as wildcad_router
+from integrations.nws_fire.connector import router as nws_router
+from integrations.airnow.connector import router as airnow_router
+from integrations.watchduty.connector import router as watchduty_router
 from integrations.admin.connector import router as admin_router
 
 app = FastAPI(
@@ -41,6 +44,9 @@ app.include_router(cameras_router,    prefix="/api/cameras",    tags=["Cameras"]
 app.include_router(wims_router,       prefix="/api/wims",       tags=["WIMS"],       dependencies=_auth)
 app.include_router(rx_weather_router, prefix="/api/rx_weather", tags=["Rx Weather"], dependencies=_auth)
 app.include_router(wildcad_router,    prefix="/api/wildcad",    tags=["WildCAD"],    dependencies=_auth)
+app.include_router(nws_router,        prefix="/api/nws",        tags=["NWS Fire"],   dependencies=_auth)
+app.include_router(airnow_router,     prefix="/api/airnow",     tags=["AirNow"],     dependencies=_auth)
+app.include_router(watchduty_router,  prefix="/api/watchduty",  tags=["Watch Duty"], dependencies=_auth)
 
 # Admin endpoints — each route internally requires role='admin'
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])

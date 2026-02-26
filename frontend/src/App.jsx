@@ -5,6 +5,10 @@ import CameraPanel from './components/Cameras/CameraPanel';
 import ElmfirePanel from './components/Elmfire/ElmfirePanel';
 import WimsPanel from './components/WeatherStations/WimsPanel';
 import WildcadPanel from './components/Wildcad/WildcadPanel';
+import FirmsPanel from './components/Firms/FirmsPanel';
+import NWSPanel from './components/NWSFire/NWSPanel';
+import AirNowPanel from './components/AirNow/AirNowPanel';
+import WatchdutyPanel from './components/Watchduty/WatchdutyPanel';
 import Sidebar from './components/Sidebar/Sidebar';
 import { PlatformProvider } from './context/PlatformContext';
 import { PLATFORMS } from './config/platforms';
@@ -64,6 +68,10 @@ function App() {
             {activePanel === 'wildcad'    && (
               <WildcadPanel onIncidentSelect={setSelectedIncident} />
             )}
+            {activePanel === 'firms'      && <FirmsPanel />}
+            {activePanel === 'nws'        && <NWSPanel />}
+            {activePanel === 'airnow'     && <AirNowPanel />}
+            {activePanel === 'watchduty'  && <WatchdutyPanel />}
             {/* Additional panels added here as platforms expand */}
           </aside>
         </main>

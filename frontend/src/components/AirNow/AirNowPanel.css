@@ -1,0 +1,61 @@
+.airnow-panel { padding: 1rem; color: #e6edf3; }
+
+.airnow-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.airnow-title  { display: flex; align-items: flex-start; gap: 0.75rem; }
+.panel-icon    { font-size: 1.5rem; }
+.airnow-title h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.airnow-title p  { margin: 0; font-size: 0.8rem; color: #8b949e; }
+
+.btn-refresh {
+  background: #161b22; border: 1px solid #30363d; border-radius: 5px;
+  color: #8b949e; padding: 0.4rem 0.6rem; cursor: pointer; font-size: 1rem;
+}
+.btn-refresh:hover { color: #e6edf3; border-color: #8b949e; }
+
+.airnow-worst {
+  border: 1px solid; border-radius: 8px; padding: 0.75rem 1rem;
+  text-align: center; margin-bottom: 1rem;
+}
+.worst-label { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+.worst-value { font-size: 2.25rem; font-weight: 700; line-height: 1.2; }
+.worst-area  { font-size: 0.9rem; font-weight: 600; }
+.worst-cat   { font-size: 0.8rem; color: #8b949e; }
+
+.airnow-controls { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+.control-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+.control-group label { font-size: 0.75rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.04em; }
+.control-group select {
+  background: #161b22; border: 1px solid #30363d; border-radius: 5px;
+  color: #e6edf3; padding: 0.4rem 0.6rem; font-size: 0.85rem; outline: none;
+}
+
+.airnow-count { font-size: 0.75rem; color: #6e7681; margin-bottom: 0.5rem; }
+.airnow-loading { text-align: center; color: #6e7681; padding: 1.5rem; font-size: 0.875rem; }
+
+.airnow-list { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; max-height: 280px; overflow-y: auto; }
+
+.obs-card {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 0.5rem 0.75rem;
+}
+.obs-aqi-badge {
+  width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700; color: #000;
+}
+.obs-area { font-size: 0.85rem; font-weight: 600; }
+.obs-cat  { font-size: 0.75rem; font-weight: 600; }
+
+.airnow-scale { border-top: 1px solid #21262d; padding-top: 0.75rem; }
+.airnow-scale h3 { font-size: 0.75rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.6rem; }
+
+.scale-row { display: grid; grid-template-columns: 12px 1fr auto; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; font-size: 0.8rem; }
+.scale-dot { width: 12px; height: 12px; border-radius: 50%; }
+.scale-range { color: #6e7681; font-size: 0.75rem; }
+
+.airnow-no-key {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 1rem; font-size: 0.875rem; color: #8b949e; line-height: 1.6;
+}
+.airnow-no-key a { color: #79c0ff; }
+.airnow-no-key code { background: #0d1117; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }

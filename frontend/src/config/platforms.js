@@ -67,16 +67,34 @@ export const PLATFORMS = [
     apiBase: '/api/wildcad',
     description: 'Active fire incidents + dispatch data (NIFC IRWIN)',
   },
+  {
+    id: 'nws',
+    label: 'Fire Weather',
+    icon: '⛈️',
+    enabled: true,
+    mapLayer: true,
+    apiBase: '/api/nws',
+    description: 'NWS red flag warnings and fire weather watches',
+  },
+  {
+    id: 'airnow',
+    label: 'Air Quality',
+    icon: '💨',
+    enabled: true,
+    mapLayer: true,
+    apiBase: '/api/airnow',
+    description: 'EPA AirNow PM2.5 monitoring — wildfire smoke',
+  },
+  {
+    id: 'watchduty',
+    label: 'Watch Duty',
+    icon: '🔔',
+    enabled: true,
+    mapLayer: false,
+    apiBase: '/api/watchduty',
+    description: 'Watch Duty community wildfire alerts and links',
+  },
   // ─── Add new platforms below ───────────────────────
-  // {
-  //   id: 'my_platform',
-  //   label: 'My Platform',
-  //   icon: '🗺️',
-  //   enabled: false,
-  //   mapLayer: true,
-  //   apiBase: '/api/my_platform',
-  //   description: 'Description of what this platform provides',
-  // },
 ];
 
 export const getPlatform = (id) => PLATFORMS.find(p => p.id === id);

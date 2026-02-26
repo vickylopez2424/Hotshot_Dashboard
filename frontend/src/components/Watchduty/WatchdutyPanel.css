@@ -1,0 +1,50 @@
+.watchduty-panel { padding: 1rem; color: #e6edf3; }
+
+.wd-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; }
+.panel-icon { font-size: 1.5rem; margin-top: 0.1rem; }
+.wd-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.wd-header p  { margin: 0; font-size: 0.8rem; color: #8b949e; }
+
+.wd-launch { margin-bottom: 1.25rem; }
+.btn-launch {
+  display: block; width: 100%; text-align: center; text-decoration: none;
+  background: #e05c2a; color: #fff; border-radius: 7px;
+  padding: 0.75rem; font-size: 0.95rem; font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-launch:hover { background: #c94e1f; }
+
+.wd-about {
+  background: #161b22; border: 1px solid #21262d; border-radius: 8px;
+  padding: 0.875rem; margin-bottom: 1.25rem;
+}
+.wd-about p { margin: 0 0 0.75rem; font-size: 0.875rem; color: #8b949e; line-height: 1.6; }
+.wd-app-links { display: flex; gap: 0.75rem; }
+.app-link {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 5px;
+  padding: 0.35rem 0.75rem; font-size: 0.8rem; color: #e6edf3; text-decoration: none;
+  transition: border-color 0.15s;
+}
+.app-link:hover { border-color: #8b949e; }
+
+.wd-states { margin-bottom: 1.25rem; }
+.wd-states h3 {
+  font-size: 0.75rem; font-weight: 600; color: #8b949e;
+  text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.6rem;
+}
+.state-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.state-btn {
+  background: #161b22; border: 1px solid #21262d; border-radius: 5px;
+  padding: 0.45rem; text-align: center; font-size: 0.8rem; font-weight: 600;
+  color: #e6edf3; text-decoration: none; transition: border-color 0.15s, color 0.15s;
+}
+.state-btn:hover { border-color: #e05c2a; color: #e05c2a; }
+
+.wd-note {
+  display: flex; gap: 0.6rem; background: rgba(139,148,158,0.07);
+  border: 1px solid #21262d; border-radius: 6px; padding: 0.75rem;
+}
+.wd-note span { font-size: 1rem; flex-shrink: 0; }
+.wd-note p { margin: 0; font-size: 0.78rem; color: #6e7681; line-height: 1.5; }
+.wd-note a { color: #79c0ff; text-decoration: none; }
+.wd-note a:hover { text-decoration: underline; }
