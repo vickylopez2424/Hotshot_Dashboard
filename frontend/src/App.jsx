@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Menu } from '@mantine/core';
+import { Menu, Select } from '@mantine/core';
 import './App.css';
 import MapView from './components/Map/MapView';
 import CameraPanel from './components/Cameras/CameraPanel';
@@ -26,11 +26,23 @@ const CATEGORY_ICON = {
   Alerts: '🔔',
 };
 
+// Minimum-acreage filter for incident markers on the map
+const ACRE_FILTER_OPTIONS = [
+  { value: '0',    label: 'All incidents' },
+  { value: '1',    label: '≥ 1 acre' },
+  { value: '10',   label: '≥ 10 acres' },
+  { value: '100',  label: '≥ 100 acres' },
+  { value: '1000', label: '≥ 1,000 acres' },
+];
+
 function App() {
   const [activePanel, setActivePanel] = useState('cameras');
 
   // Enabled platforms grouped by category for the top-bar menus
   const panelGroups = getEnabledPlatformsByCategory();
+
+  // Hide incident markers smaller than this acreage (declutters the map)
+  const [incidentMinAcres, setIncidentMinAcres] = useState(10);
 
   // Shared ELMFIRE time state — panel controls it, map layer reads it
   const [elmfireTime, setElmfireTime] = useState(null);
@@ -107,12 +119,24 @@ function App() {
 
           {/* Center: interactive map */}
           <section className="map-section">
+            <div className="map-filter-overlay">
+              <Select
+                size="xs"
+                label="Min fire size"
+                data={ACRE_FILTER_OPTIONS}
+                value={String(incidentMinAcres)}
+                onChange={(v) => setIncidentMinAcres(Number(v ?? 0))}
+                allowDeselect={false}
+                comboboxProps={{ withinPortal: true }}
+              />
+            </div>
             <MapView
               elmfireTime={elmfireTime}
               landfireLayer={landfireLayer}
               landfireOpacity={landfireOpacity}
               vegetationLayer={vegetationLayer}
               vegetationOpacity={vegetationOpacity}
+              incidentMinAcres={incidentMinAcres}
             />
           </section>
 

@@ -28,7 +28,7 @@ function MapClickHandler() {
 const DEFAULT_CENTER = [38.9, -120.5];
 const DEFAULT_ZOOM = 8;
 
-function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity, vegetationLayer, vegetationOpacity }) {
+function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity, vegetationLayer, vegetationOpacity, incidentMinAcres }) {
   const { isLayerActive } = usePlatform();
 
   return (
@@ -76,7 +76,7 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
       )}
       {isLayerActive('wims')    && <WimsLayer />}
       {isLayerActive('cameras') && <CameraMarkerLayer />}
-      {isLayerActive('wildcad') && <WildcadLayer />}
+      {isLayerActive('wildcad') && <WildcadLayer minAcres={incidentMinAcres} />}
       {isLayerActive('nws')        && <NWSLayer />}
       {isLayerActive('airnow')     && <AirNowLayer />}
       {isLayerActive('landfire')   && (

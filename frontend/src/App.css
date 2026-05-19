@@ -105,6 +105,20 @@
   overflow: hidden;
 }
 
+/* Incident size filter — floating control over the map */
+.map-filter-overlay {
+  position: absolute;
+  top: 12px;
+  left: 52px;
+  z-index: 1000;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  width: 150px;
+}
+
 /* ─── Right Panel ────────────────────────────────── */
 .data-panel {
   background: #12122a;

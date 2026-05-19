@@ -65,7 +65,7 @@ function fireIcon(inc) {
   });
 }
 
-function WildcadLayer({ state, onIncidentClick }) {
+function WildcadLayer({ state, onIncidentClick, minAcres = 0 }) {
   const [incidents, setIncidents] = useState([]);
 
   useEffect(() => {
@@ -75,9 +75,14 @@ function WildcadLayer({ state, onIncidentClick }) {
       .catch(() => setIncidents([]));
   }, [state]);
 
+  // Hide incidents below the minimum-acreage filter (null acreage counts as 0)
+  const visible = incidents.filter(
+    (f) => (parseFloat(f.properties.daily_acres) || 0) >= minAcres
+  );
+
   return (
     <>
-      {incidents.map((feature, i) => {
+      {visible.map((feature, i) => {
         const inc = feature.properties;
         const color = isContained(inc) ? '#8a8a8a'
           : (inc.percent_contained ?? 0) >= 50 ? '#ff9800' : '#e53935';
