@@ -42,10 +42,13 @@
 }
 
 .nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: transparent;
   border: 1px solid #333;
   color: #aaa;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -57,6 +60,11 @@
   background: #ff6b35;
   border-color: #ff6b35;
   color: #fff;
+}
+
+.nav-caret {
+  font-size: 0.7rem;
+  opacity: 0.7;
 }
 
 .topbar-status {

@@ -100,6 +100,7 @@ export const PLATFORMS = [
     icon: '🔔',
     enabled: true,
     mapLayer: false,
+    category: 'Alerts',
     apiBase: '/api/watchduty',
     description: 'Watch Duty community wildfire alerts and links',
   },
@@ -119,6 +120,7 @@ export const PLATFORMS = [
     icon: '🌱',
     enabled: true,
     mapLayer: false,
+    category: 'Vegetation',
     apiBase: '/api/plant-id',
     description: 'AI plant identification with fire behavior lookup',
   },
@@ -135,8 +137,11 @@ export const PLATFORMS = [
   // ─── Add new platforms below ───────────────────────
 ];
 
-// Display order of layer groups in the Sidebar
+// Display order of layer groups in the Sidebar (map-layer platforms only)
 export const LAYER_CATEGORIES = ['Fire', 'Weather', 'Vegetation', 'Air Quality'];
+
+// Display order of the top-bar panel menus (all enabled platforms)
+export const PANEL_CATEGORIES = ['Fire', 'Weather', 'Vegetation', 'Air Quality', 'Alerts'];
 
 export const getPlatform = (id) => PLATFORMS.find(p => p.id === id);
 export const getEnabledPlatforms = () => PLATFORMS.filter(p => p.enabled);
@@ -149,6 +154,19 @@ export const getMapLayerPlatforms = () => PLATFORMS.filter(p => p.enabled && p.m
 export const getMapLayerPlatformsByCategory = () => {
   const groups = {};
   for (const p of getMapLayerPlatforms()) {
+    const cat = p.category || 'Other';
+    (groups[cat] = groups[cat] || []).push(p);
+  }
+  return groups;
+};
+
+/**
+ * All enabled platforms grouped by category — used by the top-bar menus.
+ * Returns { [category]: Platform[] }.
+ */
+export const getEnabledPlatformsByCategory = () => {
+  const groups = {};
+  for (const p of getEnabledPlatforms()) {
     const cat = p.category || 'Other';
     (groups[cat] = groups[cat] || []).push(p);
   }

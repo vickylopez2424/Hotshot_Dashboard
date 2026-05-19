@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Menu } from '@mantine/core';
 import './App.css';
 import MapView from './components/Map/MapView';
 import CameraPanel from './components/Cameras/CameraPanel';
@@ -14,10 +15,22 @@ import PlantIdPanel from './components/PlantId/PlantIdPanel';
 import VegetationPanel from './components/Vegetation/VegetationPanel';
 import Sidebar from './components/Sidebar/Sidebar';
 import { PlatformProvider } from './context/PlatformContext';
-import { PLATFORMS } from './config/platforms';
+import { PANEL_CATEGORIES, getEnabledPlatformsByCategory } from './config/platforms';
+
+// Top-bar menu icon per category
+const CATEGORY_ICON = {
+  Fire: '🔥',
+  Weather: '🌤️',
+  Vegetation: '🌿',
+  'Air Quality': '💨',
+  Alerts: '🔔',
+};
 
 function App() {
   const [activePanel, setActivePanel] = useState('cameras');
+
+  // Enabled platforms grouped by category for the top-bar menus
+  const panelGroups = getEnabledPlatformsByCategory();
 
   // Shared ELMFIRE time state — panel controls it, map layer reads it
   const [elmfireTime, setElmfireTime] = useState(null);
@@ -44,15 +57,43 @@ function App() {
             <h1>Hotshot Dashboard</h1>
           </div>
           <nav className="topbar-nav">
-            {PLATFORMS.filter(p => p.enabled).map(platform => (
-              <button
-                key={platform.id}
-                className={`nav-btn ${activePanel === platform.id ? 'active' : ''}`}
-                onClick={() => setActivePanel(platform.id)}
-              >
-                {platform.icon} {platform.label}
-              </button>
-            ))}
+            {PANEL_CATEGORIES.map(cat => {
+              const platforms = panelGroups[cat] || [];
+              if (platforms.length === 0) return null;
+
+              const activeInCat = platforms.find(p => p.id === activePanel);
+              const icon = CATEGORY_ICON[cat] || '';
+
+              return (
+                <Menu
+                  key={cat}
+                  position="bottom-start"
+                  width={220}
+                  shadow="md"
+                  withinPortal
+                >
+                  <Menu.Target>
+                    <button className={`nav-btn ${activeInCat ? 'active' : ''}`}>
+                      {icon} {activeInCat ? activeInCat.label : cat}
+                      <span className="nav-caret">▾</span>
+                    </button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Label>{icon} {cat}</Menu.Label>
+                    {platforms.map(p => (
+                      <Menu.Item
+                        key={p.id}
+                        leftSection={p.icon}
+                        rightSection={activePanel === p.id ? '●' : null}
+                        onClick={() => setActivePanel(p.id)}
+                      >
+                        {p.label}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Dropdown>
+                </Menu>
+              );
+            })}
           </nav>
           <div className="topbar-status">
             <span className="status-dot live"></span> Live
