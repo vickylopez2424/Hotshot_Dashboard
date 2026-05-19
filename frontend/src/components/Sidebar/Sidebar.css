@@ -15,46 +15,41 @@
   color: #ff6b35;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.layer-list {
-  list-style: none;
-  padding: 8px 0;
+.sidebar-body {
+  padding: 10px 8px;
 }
 
-.layer-item {
-  padding: 10px 16px;
-  border-bottom: 1px solid #1e1e3a;
-}
-
-.layer-toggle {
+/* Checkbox label: layer name + description stacked */
+.layer-cb-label {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #ddd;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.layer-toggle input[type="checkbox"] {
-  accent-color: #ff6b35;
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
+/* ─── Mantine Accordion theming to match the dark dashboard ─── */
+.sidebar-body .mantine-Accordion-item {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  margin-bottom: 8px;
 }
 
-.layer-icon {
-  font-size: 1rem;
+.sidebar-body .mantine-Accordion-item[data-active] {
+  border-color: #3a3a5a;
 }
 
-.layer-label {
-  font-weight: 500;
+.sidebar-body .mantine-Accordion-control {
+  padding: 8px 10px;
 }
 
-.layer-desc {
-  font-size: 0.7rem;
-  color: #666;
-  margin-top: 4px;
-  margin-left: 22px;
-  line-height: 1.4;
+.sidebar-body .mantine-Accordion-control:hover {
+  background: #20203c;
+}
+
+.sidebar-body .mantine-Accordion-content {
+  padding: 4px 10px 12px;
 }

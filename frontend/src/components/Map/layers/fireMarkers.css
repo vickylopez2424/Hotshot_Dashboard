@@ -1,0 +1,54 @@
+/* Watch Duty-style flame incident markers (used by WildcadLayer) */
+
+.fire-div-icon {
+  background: none;
+  border: none;
+}
+
+.fire-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.fire-flame {
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+  transition: transform 0.12s ease;
+}
+
+.fire-marker:hover .fire-flame {
+  transform: scale(1.15);
+}
+
+/* Contained / controlled fires render gray, like Watch Duty */
+.fire-marker.contained .fire-flame {
+  filter: grayscale(100%) brightness(0.85) opacity(0.7)
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.fire-label {
+  text-align: center;
+  margin-top: -3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fire-name {
+  display: block;
+  font-weight: 700;
+  font-size: 12px;
+  color: #1a1a1a;
+  text-shadow:
+    0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 4px #fff;
+}
+
+.fire-acres {
+  display: block;
+  font-weight: 600;
+  font-size: 10px;
+  color: #444;
+  text-shadow:
+    0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+}

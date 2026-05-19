@@ -35,14 +35,15 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
     <MapContainer
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
-      style={{ height: '100%', width: '100%', background: '#0f0f1a' }}
+      style={{ height: '100%', width: '100%', background: '#dfe2e0' }}
     >
       <LayersControl position="topright">
-        {/* Base layers */}
-        <LayersControl.BaseLayer checked name="Dark (ESRI)">
+        {/* Base layers — Topographic default for the Watch Duty look */}
+        <LayersControl.BaseLayer checked name="Topographic">
           <TileLayer
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-            attribution="ESRI Dark Gray"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+            attribution="ESRI World Topographic"
+            maxZoom={19}
           />
         </LayersControl.BaseLayer>
 
@@ -50,6 +51,13 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution="ESRI World Imagery"
+          />
+        </LayersControl.BaseLayer>
+
+        <LayersControl.BaseLayer name="Dark (ESRI)">
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+            attribution="ESRI Dark Gray"
           />
         </LayersControl.BaseLayer>
 

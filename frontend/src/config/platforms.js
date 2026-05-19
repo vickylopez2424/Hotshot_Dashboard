@@ -10,6 +10,7 @@
  *   icon      — emoji or icon string
  *   enabled   — toggle on/off without deleting
  *   mapLayer  — true if this platform contributes a map layer
+ *   category  — layer group shown in the Sidebar (see LAYER_CATEGORIES)
  *   apiBase   — backend endpoint prefix (proxied through FastAPI)
  */
 export const PLATFORMS = [
@@ -19,6 +20,7 @@ export const PLATFORMS = [
     icon: '🛰️',
     enabled: true,
     mapLayer: true,
+    category: 'Fire',
     apiBase: '/api/firms',
     description: 'NASA FIRMS real-time satellite fire detections',
   },
@@ -28,6 +30,7 @@ export const PLATFORMS = [
     icon: '📈',
     enabled: true,
     mapLayer: true,
+    category: 'Fire',
     apiBase: '/api/elmfire',
     description: 'Physics-based wildfire spread prediction model',
   },
@@ -37,6 +40,7 @@ export const PLATFORMS = [
     icon: '📷',
     enabled: true,
     mapLayer: true,
+    category: 'Fire',
     apiBase: '/api/cameras',
     description: 'ALERTWildfire live camera feeds',
   },
@@ -46,6 +50,7 @@ export const PLATFORMS = [
     icon: '🌡️',
     enabled: true,
     mapLayer: true,
+    category: 'Weather',
     apiBase: '/api/wims',
     description: 'WIMS fire weather stations (RAWS network)',
   },
@@ -55,6 +60,7 @@ export const PLATFORMS = [
     icon: '🌬️',
     enabled: true,
     mapLayer: true,
+    category: 'Weather',
     apiBase: '/api/rx_weather',
     description: 'Prescribed burn weather station data',
   },
@@ -64,6 +70,7 @@ export const PLATFORMS = [
     icon: '🚒',
     enabled: true,
     mapLayer: true,
+    category: 'Fire',
     apiBase: '/api/wildcad',
     description: 'Active fire incidents + dispatch data (NIFC IRWIN)',
   },
@@ -73,6 +80,7 @@ export const PLATFORMS = [
     icon: '⛈️',
     enabled: true,
     mapLayer: true,
+    category: 'Weather',
     apiBase: '/api/nws',
     description: 'NWS red flag warnings and fire weather watches',
   },
@@ -82,6 +90,7 @@ export const PLATFORMS = [
     icon: '💨',
     enabled: true,
     mapLayer: true,
+    category: 'Air Quality',
     apiBase: '/api/airnow',
     description: 'EPA AirNow PM2.5 monitoring — wildfire smoke',
   },
@@ -100,6 +109,7 @@ export const PLATFORMS = [
     icon: '🌿',
     enabled: true,
     mapLayer: true,
+    category: 'Vegetation',
     apiBase: '/api/landfire',
     description: 'USDA/USDI vegetation and fire behavior fuel models (30m)',
   },
@@ -118,12 +128,29 @@ export const PLATFORMS = [
     icon: '🛰️',
     enabled: true,
     mapLayer: true,
+    category: 'Vegetation',
     apiBase: '/api/vegetation',
     description: 'NASA MODIS NDVI vegetation stress analysis',
   },
   // ─── Add new platforms below ───────────────────────
 ];
 
+// Display order of layer groups in the Sidebar
+export const LAYER_CATEGORIES = ['Fire', 'Weather', 'Vegetation', 'Air Quality'];
+
 export const getPlatform = (id) => PLATFORMS.find(p => p.id === id);
 export const getEnabledPlatforms = () => PLATFORMS.filter(p => p.enabled);
 export const getMapLayerPlatforms = () => PLATFORMS.filter(p => p.enabled && p.mapLayer);
+
+/**
+ * Map-layer platforms grouped by category.
+ * Returns { [category]: Platform[] } for use in the Sidebar accordion.
+ */
+export const getMapLayerPlatformsByCategory = () => {
+  const groups = {};
+  for (const p of getMapLayerPlatforms()) {
+    const cat = p.category || 'Other';
+    (groups[cat] = groups[cat] || []).push(p);
+  }
+  return groups;
+};
