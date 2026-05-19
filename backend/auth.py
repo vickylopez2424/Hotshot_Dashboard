@@ -32,6 +32,23 @@ SUPABASE_URL         = os.getenv("SUPABASE_URL", "")
 SUPABASE_JWT_SECRET  = os.getenv("SUPABASE_JWT_SECRET", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
+# ─── Demo mode ────────────────────────────────────────────────────────────────
+# When DEMO_MODE=true, all auth is bypassed: every protected endpoint behaves
+# as if called by an approved admin. Use this for local development and for
+# agency demos where logging in would just be friction. NEVER enable in prod.
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
+
+# Synthetic user returned for every request while DEMO_MODE is on.
+_DEMO_USER = {
+    "sub": "demo-user",
+    "email": "demo@nbtechai.com",
+    "role": "admin",
+    "user_metadata": {"role": "admin"},
+}
+
+if DEMO_MODE:
+    logger.warning("DEMO_MODE is ON — authentication is bypassed for all endpoints")
+
 _bearer = HTTPBearer(auto_error=False)
 
 # ─── Per-user approval cache ──────────────────────────────────────────────────
@@ -112,6 +129,8 @@ def get_current_user(
     FastAPI dependency — validates JWT and returns the decoded user payload.
     Raises 401 if token is missing or invalid.
     """
+    if DEMO_MODE:
+        return _DEMO_USER
     if not credentials:
         raise HTTPException(status_code=401, detail="Authentication required")
     return _decode_token(credentials.credentials)
@@ -125,6 +144,8 @@ def get_approved_user(user: dict = Depends(get_current_user)) -> dict:
     Use this on all dashboard endpoints.
     Raises 403 with a clear message if not yet approved.
     """
+    if DEMO_MODE:
+        return user
     user_id = user.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid user token")
@@ -145,6 +166,8 @@ def get_admin_user(user: dict = Depends(get_approved_user)) -> dict:
     FastAPI dependency — requires approved user with role='admin'.
     Used for admin-only endpoints (approve/reject users).
     """
+    if DEMO_MODE:
+        return user
     role = user.get("user_metadata", {}).get("role") or user.get("role", "user")
     if role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")

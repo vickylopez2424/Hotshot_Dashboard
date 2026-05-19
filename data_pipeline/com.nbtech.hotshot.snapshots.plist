@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nbtech.hotshot.snapshots</string>
+
+    <!-- Run the snapshot poller using the backend's Python venv -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/backend/.venv/bin/python</string>
+        <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/snapshot.py</string>
+    </array>
+
+    <!-- Every 3 hours (10800 seconds) -->
+    <key>StartInterval</key>
+    <integer>10800</integer>
+
+    <!-- Also run once immediately when the schedule is loaded -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Logs (data/ is gitignored) -->
+    <key>StandardOutPath</key>
+    <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/data/snapshot.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/data/snapshot.log</string>
+</dict>
+</plist>

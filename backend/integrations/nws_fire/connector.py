@@ -67,7 +67,7 @@ def _fetch_alerts() -> list:
                 f"{NWS_BASE_URL}/alerts/active",
                 params={"event": event, "status": "actual"},
                 headers=headers,
-                timeout=12,
+                timeout=30,
             )
             resp.raise_for_status()
             data = resp.json()

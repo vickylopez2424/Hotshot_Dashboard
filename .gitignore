@@ -40,6 +40,10 @@ backend/data/cache/
 *.geotiff
 *.nc
 
+# Data pipeline — collected history DB + logs (large, regenerable, machine-local)
+data_pipeline/data/
+*.db
+
 # API keys — never commit these
 secrets.json
 api_keys.json

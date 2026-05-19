@@ -20,13 +20,15 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # ─── NIFC ArcGIS REST endpoints ───────────────────────────────────────────────
-NIFC_BASE = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services"
+# Hosted in the NIFC ArcGIS Online org (T4QMspbfLg3qTGWY). Service names per
+# the NIFC Open Data site: https://data-nifc.opendata.arcgis.com/
+NIFC_BASE = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services"
 
 ENDPOINTS = {
     # Active / current fire incidents
     "current": f"{NIFC_BASE}/WFIGS_Incident_Locations_Current/FeatureServer/0/query",
     # Year-to-date (used for trends)
-    "ytd":     f"{NIFC_BASE}/WFIGS_Incident_Locations_YTD/FeatureServer/0/query",
+    "ytd":     f"{NIFC_BASE}/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query",
 }
 
 # Fire weather only — exclude prescribed burns, non-fire
@@ -43,7 +45,7 @@ INCIDENT_FIELDS = ",".join([
     "FireDiscoveryDateTime",
     "ContainmentDateTime",
     "ControlDateTime",
-    "DailyAcres",
+    "IncidentSize",          # current acreage (WFIGS renamed this from DailyAcres)
     "InitialResponseAcres",
     "FireCause",
     "FireCauseGeneral",
@@ -229,7 +231,7 @@ def _parse_feature(feature: dict) -> dict:
         "dispatch_center":     attrs.get("DispatchCenterID", ""),
         "jurisdictional_unit": attrs.get("POOJurisdictionalUnit", ""),
         "landowner_category":  attrs.get("POOLandownerCategory", ""),
-        "daily_acres":         attrs.get("DailyAcres"),
+        "daily_acres":         attrs.get("IncidentSize"),
         "initial_acres":       attrs.get("InitialResponseAcres"),
         "percent_contained":   attrs.get("PercentContained"),
         "personnel":           attrs.get("TotalIncidentPersonnel"),
@@ -243,7 +245,7 @@ def _parse_feature(feature: dict) -> dict:
         "longitude":           geom.get("x"),
         # Computed helpers
         "is_contained":        attrs.get("ContainmentDateTime") is not None,
-        "size_class":          _size_class(attrs.get("DailyAcres")),
+        "size_class":          _size_class(attrs.get("IncidentSize")),
     }
 
 

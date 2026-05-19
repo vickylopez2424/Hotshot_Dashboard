@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, DEMO_MODE } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+// Synthetic approved-admin identity used while DEMO_MODE is on.
+const DEMO_USER    = { id: 'demo-user', email: 'demo@nbtechai.com' };
+const DEMO_PROFILE = { approved: true, role: 'admin', full_name: 'Demo User', email: 'demo@nbtechai.com' };
+
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);
-  const [profile, setProfile] = useState(null);  // {approved, role, ...}
-  const [loading, setLoading] = useState(true);
+  const [user,    setUser]    = useState(DEMO_MODE ? DEMO_USER    : null);
+  const [profile, setProfile] = useState(DEMO_MODE ? DEMO_PROFILE : null);  // {approved, role, ...}
+  const [loading, setLoading] = useState(!DEMO_MODE);
 
   // Fetch the profile row so we know approval status
   async function fetchProfile(userId) {
@@ -19,6 +23,9 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    // Demo mode: no Supabase client — keep the synthetic identity, skip auth.
+    if (DEMO_MODE) return;
+
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
@@ -41,7 +48,10 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const demoDisabled = { data: null, error: new Error('Auth is disabled in demo mode') };
+
   async function signUp(email, password, fullName) {
+    if (DEMO_MODE) return demoDisabled;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -51,11 +61,13 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn(email, password) {
+    if (DEMO_MODE) return demoDisabled;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { data, error };
   }
 
   async function signOut() {
+    if (DEMO_MODE) return;
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);

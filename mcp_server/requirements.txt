@@ -1,0 +1,4 @@
+# MCP server dependencies.
+# Everything else (httpx, fastapi, dotenv, the integration code) is reused from
+# the backend — install this into the SAME venv: backend/.venv
+mcp>=1.2.0
