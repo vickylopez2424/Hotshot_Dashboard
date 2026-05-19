@@ -2,6 +2,8 @@
 
 A unified wildfire situational awareness dashboard that aggregates multiple fire monitoring platforms into a single interface.
 
+![Hotshot Dashboard](docs/dashboard.png)
+
 ## Platforms Integrated
 
 | Platform | Type | Status |
