@@ -1,9 +1,8 @@
 """
-ALERTWildfire Camera Integration
+ALERTCalifornia Camera Integration
 
-Serves camera data from the public ALERTWildfire S3 JSON feed.
-Covers ~1,600+ cameras across ALERTWildfire, ALERTCalifornia,
-ALERTWest, and HPWREN networks.
+Serves camera data from the public ALERTCalifornia "Live Cameras"
+ArcGIS Feature Service (~1,250 cameras, Esri Living Atlas).
 
 No API key required — all data is publicly accessible.
 """
@@ -31,7 +30,7 @@ class CamerasConnector(BasePlatformConnector):
         return {
             "state":        "ready" if cameras else "no_data",
             "camera_count": len(cameras),
-            "source":       "ALERTWildfire S3 public feed",
+            "source":       "ALERTCalifornia ArcGIS Feature Service",
         }
 
     def get_data(self) -> dict:
@@ -133,24 +132,21 @@ def camera_detail(camera_id: str):
 @router.get("/snapshot/{camera_id}")
 async def camera_snapshot(camera_id: str):
     """
-    Proxies a single MJPEG frame from the ALERTWildfire stream.
-    Returns the raw JPEG image (useful for thumbnails).
+    Proxies a camera's latest still frame as a raw JPEG (useful for
+    thumbnails). The source image refreshes server-side every ~15s.
     """
-    stream_url = f"https://{camera_id}.prx.alertwildfire.org"
+    cameras = fetch_all_cameras()
+    cam = next((c for c in cameras if c["camera_id"] == camera_id), None)
+    if not cam or not cam.get("image_url"):
+        raise HTTPException(status_code=404, detail=f"Camera '{camera_id}' not found")
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            resp = await client.get(stream_url)
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            resp = await client.get(cam["image_url"])
             resp.raise_for_status()
-            # MJPEG boundary — extract the first frame
-            content_type = resp.headers.get("content-type", "")
-            if "multipart" in content_type:
-                frame = _extract_first_jpeg(resp.content)
-            else:
-                frame = resp.content
             from fastapi.responses import Response
-            return Response(content=frame, media_type="image/jpeg")
+            return Response(content=resp.content, media_type="image/jpeg")
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Stream unavailable: {e}")
+        raise HTTPException(status_code=502, detail=f"Snapshot unavailable: {e}")
 
 
 @router.get("/networks")
@@ -177,21 +173,6 @@ def list_regions():
 
 @router.post("/refresh")
 def refresh_cameras():
-    """Force-refresh the camera list from the S3 feed (clears cache)."""
+    """Force-refresh the camera list from the feature service (clears cache)."""
     cameras = fetch_all_cameras(force_refresh=True)
     return {"status": "refreshed", "camera_count": len(cameras)}
-
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
-def _extract_first_jpeg(mjpeg_bytes: bytes) -> bytes:
-    """Extract the first JPEG frame from an MJPEG stream response."""
-    SOI = b"\xff\xd8"
-    EOI = b"\xff\xd9"
-    start = mjpeg_bytes.find(SOI)
-    if start == -1:
-        return mjpeg_bytes
-    end = mjpeg_bytes.find(EOI, start)
-    if end == -1:
-        return mjpeg_bytes[start:]
-    return mjpeg_bytes[start: end + 2]

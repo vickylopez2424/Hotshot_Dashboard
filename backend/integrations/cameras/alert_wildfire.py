@@ -1,16 +1,20 @@
 """
-ALERTWildfire Camera Data Source
+ALERTCalifornia Camera Data Source
 
-Fetches the complete camera list from the public ALERTWildfire S3 JSON feed.
-This covers all ~1,600+ cameras in the ALERTWildfire, ALERTCalifornia,
-ALERTWest, and HPWREN networks.
+Fetches the camera list from the public ALERTCalifornia "Live Cameras"
+ArcGIS Feature Service, published by Esri + UC San Diego in the ArcGIS
+Living Atlas. ~1,250 cameras, no API key or login required.
 
-Data source (no auth required):
-  https://s3-us-west-2.amazonaws.com/awf-data-public-prod/all-cameras.json
+This replaced the old ALERTWildfire S3 JSON feed
+(s3-us-west-2.amazonaws.com/awf-data-public-prod/all-cameras.json),
+which now returns HTTP 403.
 
-Camera stream URLs:
-  MJPEG stream : https://{camera_id}.prx.alertwildfire.org
-  Viewer page  : https://www.alertwildfire.org/{region}/index.html?camera={camera_id}
+Data source (public, no auth):
+  https://services8.arcgis.com/X84q166Srnyl4JMV/arcgis/rest/services/
+    ALERTCalifornia_Camera_Feed/FeatureServer/0
+
+Each camera record exposes a `latest-frame.jpg` still image (refreshed
+server-side every ~15s) and a public viewer-page URL.
 """
 import time
 import logging
@@ -19,19 +23,19 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ─── Public data endpoints ────────────────────────────────────────────────────
-S3_CAMERAS_URL = (
-    "https://s3-us-west-2.amazonaws.com/awf-data-public-prod/all-cameras.json"
+# ─── Public data endpoint ─────────────────────────────────────────────────────
+FEATURE_SERVICE_URL = (
+    "https://services8.arcgis.com/X84q166Srnyl4JMV/arcgis/rest/services/"
+    "ALERTCalifornia_Camera_Feed/FeatureServer/0/query"
 )
-ALERTWILDFIRE_VIEWER = "https://www.alertwildfire.org"
-MJPEG_PROXY_BASE     = "https://{camera_id}.prx.alertwildfire.org"
+_PAGE_SIZE = 1000  # ArcGIS pagination chunk
 
-# Cache for 1 hour — camera list rarely changes
+# Cache for 1 hour — the camera list rarely changes
 CAMERAS_CACHE_TTL = 3600
 _cameras_cache: dict = {"data": None, "ts": 0.0}
 
 
-# ─── Known regions (for URL construction when not in JSON) ───────────────────
+# ─── State → region map (kept for connector import compatibility) ────────────
 REGION_BY_STATE = {
     "CA": "california", "OR": "oregon", "WA": "washington",
     "NV": "nevada",     "ID": "idaho",  "MT": "montana",
@@ -42,8 +46,8 @@ REGION_BY_STATE = {
 
 def fetch_all_cameras(force_refresh: bool = False) -> list:
     """
-    Returns the full camera list from the ALERTWildfire S3 feed.
-    Results are cached for 1 hour.
+    Returns the full camera list from the ALERTCalifornia Feature Service.
+    Pages through all records; results are cached for 1 hour.
     """
     now = time.time()
     if not force_refresh and _cameras_cache["data"] and \
@@ -51,34 +55,38 @@ def fetch_all_cameras(force_refresh: bool = False) -> list:
         return _cameras_cache["data"]
 
     try:
-        resp = httpx.get(S3_CAMERAS_URL, timeout=20, follow_redirects=True)
-        resp.raise_for_status()
-        raw = resp.json()
+        features: list = []
+        offset = 0
+        with httpx.Client(timeout=25, follow_redirects=True) as client:
+            while True:
+                resp = client.get(FEATURE_SERVICE_URL, params={
+                    "where":             "1=1",
+                    "outFields":         "*",
+                    "outSR":             "4326",      # return lat/lon
+                    "returnGeometry":    "true",
+                    "resultOffset":      offset,
+                    "resultRecordCount": _PAGE_SIZE,
+                    "f":                 "json",
+                })
+                resp.raise_for_status()
+                page = resp.json().get("features", [])
+                features.extend(page)
+                if len(page) < _PAGE_SIZE:
+                    break
+                offset += _PAGE_SIZE
 
-        # The S3 feed may return a list or a dict with a cameras key
-        if isinstance(raw, list):
-            cameras_raw = raw
-        elif isinstance(raw, dict):
-            cameras_raw = (
-                raw.get("cameras") or raw.get("data") or
-                raw.get("items") or list(raw.values())[0]
-                if raw else []
-            )
-        else:
-            cameras_raw = []
-
-        cameras = [_normalize(c) for c in cameras_raw if c]
+        cameras = [_normalize(f) for f in features]
         cameras = [c for c in cameras if c.get("latitude") and c.get("longitude")]
 
         _cameras_cache["data"] = cameras
         _cameras_cache["ts"]   = now
-        logger.info("ALERTWildfire: loaded %d cameras from S3", len(cameras))
+        logger.info("ALERTCalifornia: loaded %d cameras", len(cameras))
         return cameras
 
     except httpx.HTTPError as e:
-        logger.error("ALERTWildfire S3 fetch failed: %s", e)
-    except Exception as e:
-        logger.exception("ALERTWildfire camera fetch error")
+        logger.error("ALERTCalifornia feature service fetch failed: %s", e)
+    except Exception:
+        logger.exception("ALERTCalifornia camera fetch error")
 
     # Return stale cache on error rather than empty
     return _cameras_cache["data"] or []
@@ -98,10 +106,10 @@ def filter_cameras(
     Filter the camera list and return a paginated result.
 
     state   : two-letter state code, e.g. 'CA'
-    region  : alertwildfire region name, e.g. 'california'
+    region  : county / region name
     network : 'ALERTCalifornia', 'ALERTWest', 'HPWREN', etc.
     bbox    : 'lon_min,lat_min,lon_max,lat_max'
-    search  : search camera name
+    search  : search camera name or id
     limit   : page size (default 200)
     offset  : pagination offset
     """
@@ -113,7 +121,7 @@ def filter_cameras(
 
     if region:
         r = region.lower()
-        filtered = [c for c in filtered if c.get("region", "").lower() == r]
+        filtered = [c for c in filtered if r in c.get("region", "").lower()]
 
     if network:
         n = network.lower()
@@ -139,75 +147,48 @@ def filter_cameras(
     page  = filtered[offset: offset + limit]
 
     return {
-        "cameras": page,
-        "total":   total,
-        "offset":  offset,
-        "limit":   limit,
+        "cameras":  page,
+        "total":    total,
+        "offset":   offset,
+        "limit":    limit,
         "has_more": offset + limit < total,
     }
 
 
 # ─── Normalization ────────────────────────────────────────────────────────────
 
-def _normalize(raw: dict) -> dict:
-    """
-    Normalize a raw camera record from the S3 JSON.
-    The ALERTWildfire JSON schema is not formally documented, so we handle
-    several known field name variations.
-    """
-    # Camera ID — try multiple field names
-    camera_id = (
-        raw.get("id") or raw.get("cameraId") or raw.get("camera_id") or
-        raw.get("name") or ""
-    )
+def _normalize(feature: dict) -> dict:
+    """Normalize one ArcGIS feature into the dashboard camera schema."""
+    attr = feature.get("attributes", {}) or {}
+    geom = feature.get("geometry", {}) or {}
+
+    camera_id = attr.get("siteId") or attr.get("cameraName") or ""
     if not camera_id:
         return {}
 
-    # Name — prefer a human-readable name
-    name = (
-        raw.get("displayName") or raw.get("display_name") or
-        raw.get("cameraName") or raw.get("camera_name") or
-        raw.get("title") or raw.get("name") or camera_id
-    )
-
-    # Location
-    lat = _num(raw.get("latitude") or raw.get("lat"))
-    lon = _num(raw.get("longitude") or raw.get("lon") or raw.get("lng"))
-
-    # Region / state
-    region = (
-        raw.get("region") or raw.get("area") or raw.get("state") or ""
-    ).lower().replace(" ", "")
-
-    state = _infer_state(raw, region)
-
-    # Network
-    network = (
-        raw.get("network") or raw.get("type") or
-        _infer_network(raw, region)
-    )
-
-    # Build URLs
-    viewer_url = _viewer_url(camera_id, region)
-    stream_url = MJPEG_PROXY_BASE.format(camera_id=camera_id)
+    organization = attr.get("organization") or ""
+    county       = (attr.get("county") or "").strip()
+    image_url    = attr.get("imageURL") or ""
 
     return {
-        "camera_id":   camera_id,
-        "name":        name,
-        "latitude":    lat,
-        "longitude":   lon,
-        "region":      region,
-        "state":       state,
-        "network":     network,
-        "viewer_url":  viewer_url,
-        "stream_url":  stream_url,
-        "is_ptz":      bool(raw.get("ptz") or raw.get("isPtz") or
-                            "ptz" in camera_id.lower()),
-        "is_infrared": bool(raw.get("infrared") or raw.get("ir") or
-                            "ir" in camera_id.lower() or
-                            "flir" in camera_id.lower()),
-        "elevation_ft": raw.get("elevation") or raw.get("elevation_ft"),
-        "timezone":    raw.get("timezone") or raw.get("tz") or "",
+        "camera_id":    camera_id,
+        "name":         attr.get("cameraName") or camera_id,
+        "latitude":     _num(geom.get("y")),
+        "longitude":    _num(geom.get("x")),
+        "region":       county.title(),
+        "county":       county.title(),
+        "state":        _state_for(organization),
+        "network":      _network_display(organization),
+        "viewer_url":   attr.get("cameraURL") or "",
+        # latest-frame.jpg still image — used directly by the camera card <img>
+        "stream_url":   image_url,
+        "image_url":    image_url,
+        "is_ptz":       attr.get("positionPan") is not None,
+        "is_infrared":  False,  # not exposed by this feed
+        "is_online":    str(attr.get("isOnline") or "").lower() == "online",
+        "is_active":    str(attr.get("isActive") or "").lower() == "active",
+        "view_time":    attr.get("viewTime") or "",
+        "elevation_ft": None,
     }
 
 
@@ -218,36 +199,18 @@ def _num(val) -> Optional[float]:
         return None
 
 
-def _infer_state(raw: dict, region: str) -> str:
-    """Infer two-letter state code from raw data or region name."""
-    if raw.get("state"):
-        s = str(raw["state"]).upper().replace("US-", "")
-        if len(s) == 2:
-            return s
-    for state, reg in REGION_BY_STATE.items():
-        if reg in region:
-            return state
-    return ""
-
-
-def _infer_network(raw: dict, region: str) -> str:
-    """Infer which sub-network a camera belongs to."""
-    camera_id = str(raw.get("id") or raw.get("name") or "").upper()
-    if "HPWREN" in camera_id or region == "hpwren":
-        return "HPWREN"
-    if region in ("california", "alertcalifornia"):
+def _network_display(organization: str) -> str:
+    """Map the raw `organization` value to a display network name."""
+    o = (organization or "").lower()
+    if "california" in o:
         return "ALERTCalifornia"
-    if region in ("oregon", "washington", "idaho", "montana", "colorado", "nevada", "hawaii"):
+    if "west" in o:
         return "ALERTWest"
-    return "ALERTWildfire"
+    if "hpwren" in o:
+        return "HPWREN"
+    return organization or "ALERTWildfire"
 
 
-def _viewer_url(camera_id: str, region: str) -> str:
-    """Construct the alertwildfire.org viewer URL for this camera."""
-    reg = region or "california"
-    # Some IDs include the region prefix; use it if present
-    for state, r in REGION_BY_STATE.items():
-        if camera_id.upper().startswith(state):
-            reg = r
-            break
-    return f"{ALERTWILDFIRE_VIEWER}/{reg}/index.html?camera={camera_id}"
+def _state_for(organization: str) -> str:
+    """Best-effort state code from the camera's organization."""
+    return "CA" if "california" in (organization or "").lower() else ""
