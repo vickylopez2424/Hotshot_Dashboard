@@ -98,3 +98,6 @@
 .wx-row.small { font-size: 13px; margin-top: 10px; }
 .menu-sep { height: 1px; background: rgba(255,255,255,.1); margin: 4px 2px; }
 .wind-label.calm { background: rgba(255,255,255,.85); }
+.run-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 12px; font-size: 11px; color: #6b7686; letter-spacing: .02em; }
+.run-meta span:first-child { color: #9aa7b8; font-weight: 700; letter-spacing: .08em; }
+.run-meta .warn { color: #ffcf5a; }

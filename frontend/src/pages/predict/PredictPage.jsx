@@ -238,6 +238,7 @@ export default function PredictPage() {
   const activeHour = phase === 'done' && result ? Math.max(0, Math.round((timeMin ?? result.max_time_minutes) / 60) - 1) : 0;
   const activePeriod = periods[Math.min(activeHour, periods.length - 1)];
   const isSample = summary?.source === 'sample' || result?.source === 'sample';
+  const runInfo = result?.run;
 
   return (
     <div className="predict">
@@ -383,6 +384,12 @@ export default function PredictPage() {
             </div>
             <WeatherStrip periods={periods} activeIndex={activeHour} onPick={i => setTimeMin(Math.min((i + 1) * 60, result.max_time_minutes))} />
 
+            {runInfo && (
+              <div className="run-meta">
+                <span>ELMFIRE</span><span>{runInfo.landfire_version?.split(' ')[0] || 'LANDFIRE'} fuels</span><span>{runInfo.cell_size_m} m cells</span><span>{runInfo.domain_km} km domain</span><span>{runInfo.model_s != null ? `${runInfo.model_s}s` : ''}</span>
+                {runInfo.ignition_snap_m > 0 && <span className="warn">ignition moved {Math.round(runInfo.ignition_snap_m)} m to burnable fuel</span>}
+              </div>
+            )}
             <div className="fine">Decision support only. Not a substitute for WFDSS, the IAP, or on-scene judgment.</div>
           </>
         )}

@@ -1,8 +1,9 @@
 """
 Spread engines. One interface, two implementations:
 
-  elmfire  the real model, run through prediction/run_elmfire.sh (Docker).
-           Raises EngineUnavailable until that script exists.
+  elmfire  the real model: elmfire_pipeline.py builds LANDFIRE + NWS inputs and
+           runs prediction/run_elmfire.sh (Docker, image elmfire:arm64).
+           Raises EngineUnavailable only if Docker or the image is missing.
   sample   the bundled sample shape moved to the ignition point. Exists only so
            the screen can be built and demoed before the model is connected.
            Every response from it is stamped source="sample" and the UI shows
@@ -65,9 +66,16 @@ def run_sample(lat: float, lon: float, hours: int, weather: dict, progress=None)
 
 # ── elmfire ────────────────────────────────────────────────────────────────
 def run_elmfire(lat: float, lon: float, hours: int, weather: dict, progress=None) -> dict:
+    """Real ELMFIRE run: LANDFIRE fuels + NWS weather -> Docker -> hourly rings.
+    See elmfire_pipeline.py. EngineUnavailable only when Docker or the image is
+    missing; data failures raise ordinary exceptions naming the URL or file."""
+    from integrations.predict import elmfire_pipeline as pipe
     if not RUNNER.exists() or not os.access(RUNNER, os.X_OK):
-        raise EngineUnavailable("ELMFIRE is not connected yet. prediction/run_elmfire.sh is missing.")
-    raise EngineUnavailable("ELMFIRE runner exists but the input pipeline (LANDFIRE clip + weather table) is not built yet.")
+        raise EngineUnavailable(f"ELMFIRE runner missing or not executable: {RUNNER}")
+    try:
+        return pipe.run(lat, lon, hours, weather, progress=progress)
+    except pipe.DockerUnavailable as e:
+        raise EngineUnavailable(str(e)) from e
 
 
 ENGINES = {"sample": run_sample, "elmfire": run_elmfire}

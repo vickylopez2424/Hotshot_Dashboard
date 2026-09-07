@@ -16,7 +16,10 @@ if [ ! -d "$ROOT/backend/.venv" ]; then
 fi
 
 echo "→ backend  on http://localhost:8000"
-( cd "$ROOT/backend" && .venv/bin/uvicorn main:app --port 8000 --reload ) &
+# No --reload: under the reloader the docker CLI segfaults on the second
+# prediction (exit -11), so ELMFIRE runs fail. Restart the launcher after
+# backend edits instead.
+( cd "$ROOT/backend" && .venv/bin/uvicorn main:app --port 8000 ) &
 BACKEND_PID=$!
 
 # ── Frontend ─────────────────────────────────────────────────────────────────

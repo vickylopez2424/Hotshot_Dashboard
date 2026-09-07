@@ -10,6 +10,9 @@ Engines live in engines.py. Until ELMFIRE is connected, `engine` defaults to
 "sample" and every response carries source="sample" so the UI can say so.
 """
 import logging
+import shutil
+import subprocess
+import threading
 import traceback
 from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -24,7 +27,19 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 jobs.init()
 
-DEFAULT_ENGINE = "sample"
+def _elmfire_ready() -> bool:
+    """Docker reachable and the native image present."""
+    if not shutil.which("docker"):
+        return False
+    try:
+        out = subprocess.run(["docker", "image", "inspect", "elmfire:arm64"], capture_output=True, timeout=10)
+        return out.returncode == 0
+    except Exception:
+        return False
+
+
+ELMFIRE_READY = _elmfire_ready()
+DEFAULT_ENGINE = "elmfire" if ELMFIRE_READY else "sample"
 ALLOWED_HOURS = (6, 12, 24)
 
 
@@ -43,7 +58,7 @@ class PredictConnector(BasePlatformConnector):
 
     def get_status(self) -> dict:
         return {"state": "ready", "engines": list(ENGINES), "default_engine": DEFAULT_ENGINE,
-                "elmfire_connected": False}
+                "elmfire_connected": ELMFIRE_READY}
 
     def get_data(self) -> dict:
         return {"jobs": jobs.recent()}
@@ -58,7 +73,8 @@ def _run(jid: str):
         jobs.update(jid, weather={"summary": w_sum, "source": w["source"], "grid": w["station"], "periods": w["periods"]},
                     step="Running spread model")
         engine = ENGINES[job["engine"]]
-        result = engine(job["lat"], job["lon"], job["hours"], w)
+        result = engine(job["lat"], job["lon"], job["hours"], w,
+                        progress=lambda step: jobs.update(jid, step=step))
         summary = summarize_result(result, job["lat"], job["lon"], w_sum)
         jobs.update(jid, status="done", step="Done", result=result, summary=summary)
     except EngineUnavailable as e:
@@ -91,7 +107,7 @@ def create(req: PredictRequest, background: BackgroundTasks, user: dict = Depend
         raise HTTPException(400, f"unknown engine {engine}")
     user_id = (user or {}).get("sub") or (user or {}).get("id")
     jid = jobs.create(req.lat, req.lon, req.hours, engine, req.incident_id, req.incident_name, user_id)
-    background.add_task(_run, jid)
+    threading.Thread(target=_run, args=(jid,), daemon=True, name=f"predict-{jid}").start()
     return {"job_id": jid, "status": "queued", "engine": engine}
 
 
