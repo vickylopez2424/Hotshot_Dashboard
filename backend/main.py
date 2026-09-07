@@ -21,6 +21,7 @@ from integrations.landfire.connector import router as landfire_router
 from integrations.plant_id.connector import router as plant_id_router
 from integrations.vegetation.connector import router as vegetation_router
 from integrations.admin.connector import router as admin_router
+from integrations.predict.connector import router as predict_router
 
 app = FastAPI(
     title="Hotshot Dashboard API",
@@ -53,6 +54,7 @@ app.include_router(watchduty_router,  prefix="/api/watchduty",  tags=["Watch Dut
 app.include_router(landfire_router,   prefix="/api/landfire",   tags=["LANDFIRE"],   dependencies=_auth)
 app.include_router(plant_id_router,   prefix="/api/plant-id",   tags=["Plant ID"],   dependencies=_auth)
 app.include_router(vegetation_router, prefix="/api/vegetation",  tags=["Vegetation"], dependencies=_auth)
+app.include_router(predict_router,    prefix="/api/predict",    tags=["Predict"],    dependencies=_auth)
 
 # Admin endpoints — each route internally requires role='admin'
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])

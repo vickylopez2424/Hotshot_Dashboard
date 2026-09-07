@@ -1,55 +1,102 @@
 .sidebar {
-  background: #12122a;
-  border-right: 1px solid #2a2a4a;
+  background: rgba(11, 16, 19, 0.98);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sidebar-header {
-  padding: 14px 16px;
-  background: #1a1a2e;
-  border-bottom: 1px solid #2a2a4a;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #ff6b35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ff9b63;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.07em;
   position: sticky;
   top: 0;
   z-index: 2;
+  backdrop-filter: blur(14px);
+}
+
+.sidebar-header small {
+  color: #7f8b92;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .sidebar-body {
-  padding: 10px 8px;
+  padding: 12px 10px;
 }
 
 /* Checkbox label: layer name + description stacked */
 .layer-cb-label {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  line-height: 1.25;
+}
+
+.category-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  color: #101417;
+  flex-shrink: 0;
+}
+
+.category-mark.fire { background: #ff7a3d; }
+.category-mark.blue { background: #75c7f0; }
+.category-mark.green { background: #75c889; }
+.category-mark.gray { background: #d2d9dd; }
+
+.sidebar-body .mantine-Checkbox-input {
+  background-color: #0f171a;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.sidebar-body .mantine-Checkbox-label {
+  color: #dfe5e1;
 }
 
 /* ─── Mantine Accordion theming to match the dark dashboard ─── */
 .sidebar-body .mantine-Accordion-item {
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
-  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 9px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .sidebar-body .mantine-Accordion-item[data-active] {
-  border-color: #3a3a5a;
+  border-color: rgba(255, 122, 61, 0.34);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
 .sidebar-body .mantine-Accordion-control {
-  padding: 8px 10px;
+  padding: 10px;
+  color: #eef2ee;
 }
 
 .sidebar-body .mantine-Accordion-control:hover {
-  background: #20203c;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-body .mantine-Accordion-content {
-  padding: 4px 10px 12px;
+  padding: 5px 10px 13px;
+}
+
+.sidebar-body .mantine-Badge-root {
+  font-weight: 800;
 }

@@ -11,6 +11,7 @@ import App              from './App';
 import LandingPage      from './pages/LandingPage';
 import AuthPage         from './pages/AuthPage';
 import PendingApproval  from './pages/PendingApproval';
+import PredictPage      from './pages/predict/PredictPage';
 
 // Hotshot brand theme — fire orange (#ff6b35) as the primary color
 const theme = createTheme({
@@ -38,9 +39,19 @@ root.render(
             <Route path="/auth"    element={<AuthPage />} />
             <Route path="/pending" element={<PendingApproval />} />
 
-            {/* Protected dashboard — requires approved account */}
+            {/* Predict: the first screen. One question, five taps. */}
             <Route
-              path="/*"
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <PredictPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Analyst dashboard, requires approved account */}
+            <Route
+              path="/dashboard/*"
               element={
                 <ProtectedRoute>
                   <App />

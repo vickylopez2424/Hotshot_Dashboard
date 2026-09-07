@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import CameraFeed from './CameraFeed';
 import axios from 'axios';
+import { Camera, RefreshCw, Search } from 'lucide-react';
 import './CameraPanel.css';
 
 const US_STATES = [
@@ -89,7 +90,10 @@ function CameraPanel() {
 
   return (
     <div className="camera-panel">
-      <div className="panel-header">📷 ALERTWildfire Cameras</div>
+      <div className="panel-header panel-header-icon">
+        <Camera size={16} strokeWidth={2.4} />
+        <span>ALERTWildfire Cameras</span>
+      </div>
 
       {/* Filter controls */}
       <div className="camera-controls">
@@ -119,19 +123,22 @@ function CameraPanel() {
           disabled={loading}
           title="Refresh"
         >
-          {loading ? '⏳' : '↻'}
+          <RefreshCw size={15} strokeWidth={2.4} className={loading ? 'spinning' : ''} />
         </button>
       </div>
 
       {/* Search + capability filters */}
       <div className="camera-search-row">
-        <input
-          className="cam-search"
-          type="text"
-          placeholder="Search cameras..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <label className="cam-search-wrap">
+          <Search size={14} strokeWidth={2.4} />
+          <input
+            className="cam-search"
+            type="text"
+            placeholder="Search cameras..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </label>
         <label className={`cap-toggle ${ptzOnly ? 'on' : ''}`}>
           <input type="checkbox" checked={ptzOnly} onChange={e => setPtzOnly(e.target.checked)} />
           PTZ

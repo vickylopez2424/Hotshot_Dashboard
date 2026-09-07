@@ -1,0 +1,127 @@
+.powerbi-panel {
+  margin: 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(242, 200, 17, 0.12), rgba(117, 199, 240, 0.045)),
+    rgba(255, 255, 255, 0.028);
+}
+
+.powerbi-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.powerbi-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #19160a;
+  background: linear-gradient(135deg, #f2c811, #f59e0b);
+  box-shadow: 0 10px 24px rgba(242, 200, 17, 0.16);
+  flex-shrink: 0;
+}
+
+.powerbi-header span {
+  display: block;
+  color: #a4adb2;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.powerbi-header strong {
+  display: block;
+  margin-top: 2px;
+  color: #f4f1df;
+  font-size: 0.9rem;
+}
+
+.powerbi-embed {
+  height: 220px;
+  min-height: 220px;
+}
+
+.powerbi-preview {
+  padding: 12px;
+}
+
+.powerbi-visual-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 8px;
+}
+
+.powerbi-visual-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 1px;
+  min-width: 0;
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.powerbi-visual-card.primary {
+  grid-row: span 2;
+  min-height: 132px;
+  align-content: center;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(242, 200, 17, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.05);
+}
+
+.powerbi-visual-card svg {
+  grid-row: 1 / span 2;
+  color: #f2c811;
+}
+
+.powerbi-visual-card span {
+  color: #97a3a8;
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.powerbi-visual-card strong {
+  color: #f5f5ed;
+  font-size: 0.84rem;
+  line-height: 1.15;
+}
+
+.powerbi-visual-card.primary strong {
+  font-size: 1.35rem;
+}
+
+.powerbi-bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  gap: 6px;
+  height: 72px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(5, 9, 10, 0.3);
+}
+
+.powerbi-bars span {
+  min-height: 12px;
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #f2c811, rgba(242, 200, 17, 0.2));
+}

@@ -1,27 +1,33 @@
 .camera-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
-  border-left: 3px solid #9c27b0;
-  border-radius: 6px;
-  margin-bottom: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.026));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 3px solid #75c7f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
-.camera-card:hover { border-color: #3a3a5a; }
-.camera-card.expanded { border-color: #4a4a6a; }
+.camera-card:hover {
+  border-color: rgba(117, 199, 240, 0.5);
+  transform: translateY(-1px);
+}
+.camera-card.expanded {
+  border-color: rgba(117, 199, 240, 0.62);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
 
 /* ─── Header ─────────────────────────────────────── */
 .camera-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 11px 12px;
   cursor: pointer;
   gap: 8px;
 }
 
-.camera-header:hover { background: rgba(255,255,255,0.02); }
+.camera-header:hover { background: rgba(255,255,255,0.035); }
 
 .camera-header-left {
   display: flex;
@@ -46,8 +52,8 @@
 
 .camera-name {
   font-size: 0.82rem;
-  font-weight: 600;
-  color: #ddd;
+  font-weight: 700;
+  color: #eef3ef;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -55,24 +61,24 @@
 
 .camera-sub {
   font-size: 0.66rem;
-  color: #777;
+  color: #8d989d;
   margin-top: 1px;
 }
 
 .expand-chevron {
-  color: #555;
+  color: #8d989d;
   font-size: 0.65rem;
   flex-shrink: 0;
 }
 
 /* ─── Expanded body ──────────────────────────────── */
 .camera-body {
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ─── Stream ─────────────────────────────────────── */
 .stream-container {
-  background: #0a0a14;
+  background: #05090a;
   width: 100%;
   aspect-ratio: 16 / 9;
   display: flex;
@@ -90,7 +96,7 @@
 }
 
 .stream-loading {
-  color: #555;
+  color: #78858a;
   font-size: 0.75rem;
   text-align: center;
 }
@@ -98,7 +104,7 @@
 .stream-error {
   text-align: center;
   padding: 20px;
-  color: #555;
+  color: #7c898e;
   font-size: 0.78rem;
   line-height: 1.8;
 }
@@ -107,7 +113,7 @@
 
 .stream-error-sub {
   font-size: 0.68rem;
-  color: #444;
+  color: #5f6b70;
   margin-top: 4px;
 }
 
@@ -117,8 +123,8 @@
   gap: 12px;
   padding: 8px 12px;
   font-size: 0.7rem;
-  color: #666;
-  border-bottom: 1px solid #1e1e3a;
+  color: #89959a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-wrap: wrap;
 }
 
@@ -134,13 +140,16 @@
   font-size: 0.72rem;
   text-decoration: none;
   padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid #2a2a4a;
-  color: #888;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a7b2b7;
   transition: all 0.15s;
 }
 
-.camera-link:hover { opacity: 0.8; }
+.camera-link:hover {
+  border-color: rgba(255, 155, 99, 0.52);
+  color: #ffc09c;
+}
 
 .camera-link.primary {
   font-weight: 600;

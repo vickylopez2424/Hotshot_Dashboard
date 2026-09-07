@@ -47,3 +47,9 @@ data_pipeline/data/
 # API keys — never commit these
 secrets.json
 api_keys.json
+.gstack/
+
+# ELMFIRE run artifacts and LANDFIRE cache
+prediction/elmfire-docker/outputs/
+backend/data/landfire_cache/
+backend/data/elmfire_outputs/predict_*/

@@ -47,6 +47,24 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
           />
         </LayersControl.BaseLayer>
 
+        {/* USGS Topo: the same quads Avenza Maps serves in the field */}
+        <LayersControl.BaseLayer name="USGS Topo">
+          <TileLayer
+            url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
+            attribution="USGS The National Map: USGS Topo"
+            maxZoom={16}
+          />
+        </LayersControl.BaseLayer>
+
+        {/* USGS Imagery with topo labels and contours */}
+        <LayersControl.BaseLayer name="USGS Imagery + Topo">
+          <TileLayer
+            url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
+            attribution="USGS The National Map: USGS Imagery Topo"
+            maxZoom={16}
+          />
+        </LayersControl.BaseLayer>
+
         <LayersControl.BaseLayer name="Satellite (ESRI)">
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"

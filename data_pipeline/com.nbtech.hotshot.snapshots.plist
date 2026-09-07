@@ -8,8 +8,8 @@
     <!-- Run the snapshot poller using the backend's Python venv -->
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/backend/.venv/bin/python</string>
-        <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/snapshot.py</string>
+        <string>/Users/vickylopez/nbtech-clients/hotshot-dashboard/backend/.venv/bin/python</string>
+        <string>/Users/vickylopez/nbtech-clients/hotshot-dashboard/data_pipeline/snapshot.py</string>
     </array>
 
     <!-- Every 3 hours (10800 seconds) -->
@@ -20,10 +20,10 @@
     <key>RunAtLoad</key>
     <true/>
 
-    <!-- Logs (data/ is gitignored) -->
+    <!-- Logs live in ~/Library/Logs: launchd cannot open files under ~/Documents (macOS privacy protection), which made the job exit 78 -->
     <key>StandardOutPath</key>
-    <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/data/snapshot.log</string>
+    <string>/Users/vickylopez/Library/Logs/hotshot_snapshot.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/vickylopez/Desktop/NB Tech Buiness Docs 2026/Hotshot_Dashboard/data_pipeline/data/snapshot.log</string>
+    <string>/Users/vickylopez/Library/Logs/hotshot_snapshot.log</string>
 </dict>
 </plist>

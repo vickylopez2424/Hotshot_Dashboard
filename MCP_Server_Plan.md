@@ -1,48 +1,53 @@
-# Hotshot Dashboard MCP Server — Implementation Plan
-*NB Tech AI Solutions | Generated: 2026-05-18*
+# Hotshot Dashboard — MCP Server + Firefighter LLM Assistant Plan
+*NB Tech AI Solutions | Generated: 2026-05-18 | Revised: 2026-05-20*
 
 ---
 
 ## Vision
 
-A **Model Context Protocol (MCP) server** that turns Hotshot Dashboard into the AI nervous system of the fireline:
+A **web-based wildland firefighter platform** with three layers:
 
-- **Reads** live data from all 13 wildfire integrations and exposes them as MCP tools any AI assistant can call (Claude on a tablet, an in-cab voice agent, a future custom field assistant).
-- **Receives** telemetry from field devices — tablets, FLIR cameras, drones, wearable sensors — through a generic ingestion API.
-- **Stores** every AI interaction + every device reading + every outcome into a training-ready dataset.
-- **Trains** progressively smarter fire-domain AI from that dataset (RAG today → fine-tuning → custom prediction models).
+1. **The dashboard** — React/Leaflet web app that any firefighter, IC, or dispatcher can open in a browser. Live map + situational data from all 13 integrations.
+2. **The Firefighter LLM Assistant** — embedded chat panel in the web app. A wildland-fire-tuned AI that answers questions in plain English, calls live data tools, and renders results onto the map.
+3. **The MCP server** — the engine underneath. Exposes every integration as a callable tool, ingests telemetry from field devices, stores AI interactions + outcomes, and serves the trained fire-spread model.
 
-The MCP server is both the *interface* (AI calls the dashboard) and the *collector* (devices feed the dashboard), and the data they exchange becomes the moat: a proprietary fire-domain corpus no competitor has.
+The MCP server is both the *interface* (the assistant calls it; other AI clients can too) and the *collector* (devices feed it). The data flowing through becomes a proprietary fire-domain training corpus — bootstrapped from **WildfireDB** (UCR/Vanderbilt/Stanford, CC-BY-4.0, 17M rows) and extended with every incident the platform sees.
 
 ---
 
 ## Architecture
 
 ```
-                  ┌──────────────────────────────────────────────┐
-                  │       Hotshot_Dashboard/mcp_server/          │
-                  │                                              │
-  AI clients ────►│  READ tools (MCP)                            │──► live APIs
-  (Claude,        │   • incidents, fires, weather, cameras,      │   (FIRMS, RAWS,
-   field          │     air quality, fire spread, fuels, plants  │    NWS, cameras,
-   assistants)    │                                              │    WildCAD, ...)
-                  │  WRITE ingestion (HTTP + MCP)                │
-  Field   ────────│   • POST /ingest/telemetry                   │
-  devices         │   • POST /ingest/media                       │
-  (tablets,       │   • Auto-log every MCP tool call             │
-   FLIR,                                                          │
-   drones,        │         │                                    │
-   sensors)       │         ▼                                    │
-                  │  Storage layer                               │
-                  │   • Supabase (Postgres): structured records  │
-                  │   • Object storage: imagery, GeoTIFFs, audio │
-                  │                                              │
-                  │         │                                    │
-                  │         ▼                                    │
-                  │  Training pipeline                           │──► RAG corpus
-                  │   • dataset_builder → JSONL                  │    fine-tune jobs
-                  │   • RAG indexer                              │    prediction
-                  └──────────────────────────────────────────────┘    models
+  ┌─────────────────────────────────────────────────────────────────┐
+  │                    WEB APP (browser)                            │
+  │  ┌──────────────────────┐    ┌────────────────────────────┐     │
+  │  │  React + Leaflet map │ ◄► │  Firefighter LLM Assistant │     │
+  │  │  (incidents, fires,  │    │  chat panel                │     │
+  │  │   weather, cameras)  │    │                            │     │
+  │  └──────────────────────┘    └─────────────┬──────────────┘     │
+  └────────────────────────────────────────────┼─────────────────────┘
+                                               │ HTTPS
+                                               ▼
+  ┌─────────────────────────────────────────────────────────────────┐
+  │              Hotshot_Dashboard backend + mcp_server/            │
+  │                                                                 │
+  │  /api/assistant ──► LLM orchestrator (Claude API)               │
+  │                       │                                         │
+  │                       ├──► MCP tools (live data)                │──► live APIs
+  │                       ├──► RAG retrieval (WildfireDB + history) │   (FIRMS, RAWS,
+  │                       └──► Spread-prediction model              │    NWS, cameras)
+  │                                                                 │
+  │  Field devices ──► /ingest/* ──► Storage layer                  │
+  │  (tablets,                       • Supabase (Postgres+pgvector) │
+  │   FLIR, drones,                  • Object storage (imagery)     │
+  │   wearables)                                                    │
+  │                                          │                      │
+  │                                          ▼                      │
+  │                                  Training pipeline              │──► RAG index
+  │                                  • WildfireDB ETL               │    fine-tune
+  │                                  • dataset_builder              │    prediction
+  │                                  • Spread model trainer         │    models
+  └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Directory layout
@@ -70,9 +75,13 @@ Hotshot_Dashboard/
     │   ├── db.py                  # Supabase client (reuses backend/auth.py)
     │   ├── blob.py                # Object storage adapter
     │   └── migrations/            # SQL schema
-    ├── training/                  # Phase 3
-    │   ├── dataset_builder.py     # Logged data → JSONL training samples
-    │   ├── rag_indexer.py         # Build vector index for retrieval
+    ├── training/                  # ML pipeline
+    │   ├── wildfire_db/           # WildfireDB ETL + spread model trainer
+    │   │   ├── ingest.py          # Unzip + load 17M rows to Postgres
+    │   │   ├── features.py        # Feature engineering for spread prediction
+    │   │   └── train_spread.py    # Train + evaluate the spread model
+    │   ├── dataset_builder.py     # In-house logged data → JSONL training samples
+    │   ├── rag_indexer.py         # Build vector index (WildfireDB + history)
     │   └── export.py              # Push to fine-tune API / HF dataset
     ├── auth.py                    # Device API keys + user JWTs (reuses Supabase)
     ├── config.py
@@ -81,6 +90,79 @@ Hotshot_Dashboard/
 ```
 
 **Key principle:** the MCP server *imports* `backend/integrations/*` directly — no HTTP hop, no duplicated logic. The existing FastAPI backend and the new MCP server share connector code.
+
+---
+
+## Firefighter LLM Assistant
+
+The face of the product. A chat panel inside the React web app, scoped specifically to wildland firefighters.
+
+### What it does
+A firefighter or IC types (or speaks) a question like:
+- *"What fires are within 10 miles of my position?"*
+- *"What's the wind forecast for the Bear Ridge fire over the next 6 hours?"*
+- *"Show me cameras near Big Bear Lake."*
+- *"What spread rate should I expect given these conditions?"*
+- *"Have we seen a fire like this before — same fuel model, same RH, same slope?"*
+- *"Identify this plant"* (photo upload)
+- *"What's the AQI at the staging area?"*
+
+The assistant answers in plain English **and** renders results onto the Leaflet map (incident pins, smoke plumes, camera markers, spread contours, RAWS readings).
+
+### How it's built
+- **LLM:** Claude (Anthropic API) via the standard messages endpoint with **tool use**.
+- **Tool catalog:** every MCP tool below is also exposed to the assistant. Same code, same auth, single source of truth.
+- **RAG retrieval:** before each answer, the assistant pulls relevant chunks from the WildfireDB-derived knowledge base and the in-house incident history.
+- **Spread predictions:** when the question is "what will this fire do next," the assistant calls the trained spread-prediction model (Phase 3c) and returns its output as a tool result.
+- **System prompt:** tuned for wildland firefighter context — terse answers, units in standard fireline (mph wind, % RH, ft flame length, chains/hr spread), and safety-first phrasing.
+
+### Web-app surface (Phase 1.5)
+Add to existing `frontend/src/`:
+```
+frontend/src/
+├── components/
+│   ├── AssistantPanel.tsx       # chat UI, sits next to the map
+│   ├── AssistantMessage.tsx     # renders LLM responses + tool results
+│   └── MapResultsLayer.tsx      # auto-renders LLM tool results as map layers
+└── hooks/
+    └── useAssistant.ts          # streaming chat + tool-call rendering
+```
+
+Backend new route: `POST /api/assistant` → SSE stream → orchestrates Claude + MCP tools + RAG.
+
+### Offline mode (later)
+On the fireline cell coverage is unreliable. Future option: ship a smaller fine-tuned model (Llama 3.1 8B or similar) running locally on a ruggedized tablet for offline Q&A on cached data. Out of scope for v1 but the architecture supports it because all logic lives behind the `/api/assistant` interface.
+
+---
+
+## Datasets & Training Sources
+
+### WildfireDB (primary bootstrap)
+- **Source:** Zenodo record `10.5281/zenodo.5636429` (UCR/Vanderbilt/Stanford)
+- **License:** **CC-BY-4.0 — commercial use permitted with attribution.** ✅ Federal-contract-compatible.
+- **Scale:** 17M+ rows, 4.6GB compressed, continental US, ~2011–2021
+- **Granularity:** Row-level fire-spread records connecting each fire observation to weather + vegetation + topography covariates
+- **Use:**
+  - **RAG corpus** — embed each row's situational context (region, fuel type, weather, observed spread) into pgvector. The assistant can recall "fires that looked like this one" instantly.
+  - **Training data for spread-prediction model** — supervised regression: features (weather, fuels, terrain) → target (observed spread). This becomes the `predict_fire_spread` MCP tool.
+  - **Evaluation set** — even before training in-house, WildfireDB gives us a benchmark to score future models against.
+
+### Attribution requirement
+Add to the web app footer and the assistant's about page:
+> *Spread-prediction model trained in part on WildfireDB (Singla et al., 2021), CC-BY-4.0.*
+
+### In-house corpus (built up over time)
+- Every `mcp_interactions` row (assistant Q&A on real fires)
+- Every `incident_outcomes` row (what actually happened, recorded by your firefighter users)
+- Every `telemetry_readings` + `media_assets` from field devices
+
+The in-house corpus is the moat — it grows every fire and is exclusive to you.
+
+### Future datasets to consider
+- **NIFC historical incident reports** (public)
+- **InciWeb archives** (public)
+- **NASA FIRMS historical archive** (already in the MCP tool list — could be bulk-pulled)
+- **NIST WUI incident postmortems** for structure-loss labels
 
 ---
 
@@ -122,7 +204,8 @@ One tool per useful question a fireline AI would ask. All tools return structure
 | Tool | Inputs | Returns |
 |---|---|---|
 | `situational_summary` | `lat, lon, radius` | Composite: nearby fires + weather + cameras + AQ in one call |
-| `recall_similar_incidents` | `description, location` | RAG retrieval from historical corpus (Phase 3) |
+| `recall_similar_incidents` | `description, location` | RAG retrieval from WildfireDB + in-house corpus |
+| `predict_fire_spread` | `lat, lon, weather, fuel_model, slope` | Trained model output: spread rate, direction, confidence |
 
 **Why `situational_summary` matters:** it's the "one-question" tool. A firefighter asks "what's going on at my position?" and gets fires, weather, cameras, smoke, fuels in a single response. This is your demo killer.
 
@@ -221,6 +304,32 @@ create table incident_outcomes (   -- the labels for fine-tuning
   outcome jsonb,                   -- containment time, acres, structures, decisions made, what worked
   recorded_at timestamptz default now()
 );
+
+-- WildfireDB bootstrap corpus
+create table wildfire_db_records (
+  id bigserial primary key,
+  location geography(point, 4326),
+  observed_at date,
+  fuel_model text,
+  weather jsonb,                   -- temp, RH, wind speed, wind direction, precip
+  topography jsonb,                -- slope, aspect, elevation
+  spread_observed jsonb,           -- the target variable(s)
+  source text default 'wildfiredb-v1.1'
+);
+create index on wildfire_db_records using gist (location);
+create index on wildfire_db_records (fuel_model);
+
+-- Vector embeddings for RAG (pgvector)
+create extension if not exists vector;
+create table rag_chunks (
+  id bigserial primary key,
+  source_table text not null,      -- 'wildfire_db_records' | 'mcp_interactions' | 'incident_outcomes'
+  source_id bigint not null,
+  content text not null,
+  embedding vector(1536),
+  created_at timestamptz default now()
+);
+create index on rag_chunks using ivfflat (embedding vector_cosine_ops);
 ```
 
 Indexes on `(timestamp, incident_id)` and PostGIS index on `location`.
@@ -272,6 +381,14 @@ MCP transports: **stdio** for local Claude Desktop dev, **SSE/HTTP** for product
 
 ## Phased Timeline
 
+### Phase 0 — WildfireDB ingest (runs in parallel with Phase 1, Week 1)
+- [ ] Download `wildfireDB.zip` (4.6GB) from Zenodo
+- [ ] Read the dataset's accompanying tutorial/README to understand the schema
+- [ ] Create `wildfire_db_records` table + indexes (PostGIS + pgvector)
+- [ ] Write `training/wildfire_db/ingest.py` — streams the 17M rows into Postgres
+- [ ] Spot-check 100 random rows for sanity (geography ranges, units, missing values)
+- [ ] **Deliverable:** queryable WildfireDB in your Supabase, ready for both RAG and model training
+
 ### Phase 1 — Read-only MCP server (Week 1–2)
 - [ ] Scaffold `mcp_server/` directory + dependencies (`mcp`, `httpx`, existing connectors)
 - [ ] Implement `server.py` with stdio transport
@@ -280,6 +397,14 @@ MCP transports: **stdio** for local Claude Desktop dev, **SSE/HTTP** for product
 - [ ] Add Claude Desktop config snippet to README
 - [ ] **Demo:** connect Claude Desktop, ask "what fires are burning in California right now?"
 
+### Phase 1.5 — Firefighter LLM Assistant in the web app (Week 2–3)
+- [ ] Backend: `POST /api/assistant` SSE route, wraps Claude messages API with tool use
+- [ ] Wire MCP tools as Claude tool definitions
+- [ ] System prompt tuned for wildland firefighter language and units
+- [ ] Frontend: `AssistantPanel.tsx` chat UI alongside the existing Leaflet map
+- [ ] Tool results auto-render onto the map (incident pins, weather overlays, camera markers)
+- [ ] **Demo:** firefighter opens the web app, asks the assistant a question, sees the answer + map update
+
 ### Phase 2 — Telemetry + interaction logging (Week 3–4)
 - [ ] Supabase migrations: `devices`, `telemetry_readings`, `media_assets`, `mcp_interactions`
 - [ ] `/devices/register` + per-device API keys
@@ -287,20 +412,28 @@ MCP transports: **stdio** for local Claude Desktop dev, **SSE/HTTP** for product
 - [ ] MCP server middleware to auto-log every tool call to `mcp_interactions`
 - [ ] Simple test client: a Python script simulating a tablet + a weather meter posting data
 
-### Phase 3a — RAG corpus (Month 2)
-- [ ] Add pgvector extension to Supabase
-- [ ] `rag_indexer.py` — embeds interactions + incident outcomes
-- [ ] `recall_similar_incidents` MCP tool
-- [ ] Backfill: seed with 5–10 historical incidents you can describe in detail
+### Phase 3a — RAG corpus on WildfireDB (Week 4, accelerated by Phase 0)
+- [ ] `rag_indexer.py` — embeds WildfireDB rows into `rag_chunks` (batch job)
+- [ ] `recall_similar_incidents` MCP tool wired to vector search
+- [ ] Assistant retrieves WildfireDB context on every fire-behavior question
+- [ ] **No waiting for in-house data** — WildfireDB makes this live in week 4
 
-### Phase 3b — Fine-tuning (Month 3+)
+### Phase 3b — Spread-prediction model trained on WildfireDB (Month 2)
+- [ ] `training/wildfire_db/features.py` — feature engineering pipeline
+- [ ] `training/wildfire_db/train_spread.py` — train a gradient-boosted regression (XGBoost / LightGBM) for spread rate
+- [ ] Evaluate against a held-out 10% of WildfireDB
+- [ ] Expose as `predict_fire_spread` MCP tool
+- [ ] **Deliverable:** the assistant can give numerical spread forecasts, not just verbal
+
+### Phase 3c — Fine-tuning on in-house Q&A + outcomes (Month 3+)
 - [ ] `dataset_builder.py` → JSONL with `{situation, recommendation, outcome}`
 - [ ] Manual labeling UI (or just a spreadsheet) for outcome quality
 - [ ] First fine-tune job once you have ~200+ labeled samples
 
-### Phase 3c — Custom prediction models (Month 4+)
-- [ ] Pick one use case (spread rate from RAWS + fuels is the obvious first one)
-- [ ] Train, evaluate, expose as MCP tool
+### Phase 3d — Additional prediction models (Month 4+)
+- [ ] Crew fatigue / heat injury risk from wearables
+- [ ] New-ignition detection from camera frames
+- [ ] Re-train spread model with in-house data appended to WildfireDB
 
 ---
 
@@ -327,4 +460,9 @@ License tier add-on:
 
 ## Next session pickup
 
-Resume at: **Phase 1, Step 1** — scaffold `mcp_server/` and implement the first MCP tool (`list_active_incidents` — quickest win since WildCAD/IRWIN already returns live data).
+Two parallel tracks for next session:
+
+1. **Phase 0:** download `wildfireDB.zip` from Zenodo, read the tutorial, and start writing `training/wildfire_db/ingest.py` to load the 17M rows into Supabase. This is the highest-leverage move — every later phase benefits.
+2. **Phase 1, Step 1:** scaffold `mcp_server/` and implement `list_active_incidents` (your WildCAD/IRWIN integration is already live, so this is the fastest tool to ship and demo).
+
+These can be done concurrently — Phase 0 is mostly data engineering (long-running ingest), Phase 1 is MCP plumbing. They don't block each other.

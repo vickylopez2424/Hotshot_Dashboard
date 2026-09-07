@@ -6,6 +6,7 @@
  */
 import React from 'react';
 import { Accordion, Checkbox, Badge, Group, Text, Stack } from '@mantine/core';
+import { Activity, Flame, Layers, Leaf, Wind } from 'lucide-react';
 import {
   getMapLayerPlatformsByCategory,
   LAYER_CATEGORIES,
@@ -13,12 +14,12 @@ import {
 import { usePlatform } from '../../context/PlatformContext';
 import './Sidebar.css';
 
-// Per-category icon + accent color for the group header
+// Per-category mark + accent color for the group header
 const CATEGORY_META = {
-  Fire:          { icon: '🔥', color: 'fire' },
-  Weather:       { icon: '🌤️', color: 'blue' },
-  Vegetation:    { icon: '🌿', color: 'green' },
-  'Air Quality': { icon: '💨', color: 'gray' },
+  Fire:          { Icon: Flame, color: 'fire' },
+  Weather:       { Icon: Wind, color: 'blue' },
+  Vegetation:    { Icon: Leaf, color: 'green' },
+  'Air Quality': { Icon: Activity, color: 'gray' },
 };
 
 function Sidebar() {
@@ -27,7 +28,10 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">Map Layers</div>
+      <div className="sidebar-header">
+        <span>Map Layers</span>
+        <small>{LAYER_CATEGORIES.length} groups</small>
+      </div>
 
       <div className="sidebar-body">
         <Accordion
@@ -44,15 +48,19 @@ function Sidebar() {
             const activeCount = platforms.filter((p) =>
               isLayerActive(p.id)
             ).length;
-            const meta = CATEGORY_META[cat] || {};
+            const meta = CATEGORY_META[cat] || { Icon: Layers, color: 'gray' };
+            const CategoryIcon = meta.Icon;
 
             return (
               <Accordion.Item key={cat} value={cat}>
                 <Accordion.Control>
                   <Group justify="space-between" wrap="nowrap" pr={6}>
-                    <Text size="sm" fw={600}>
-                      {meta.icon} {cat}
-                    </Text>
+                    <Group gap={8} wrap="nowrap">
+                      <span className={`category-mark ${meta.color}`}>
+                        <CategoryIcon size={14} strokeWidth={2.4} />
+                      </span>
+                      <Text size="sm" fw={700}>{cat}</Text>
+                    </Group>
                     <Badge
                       size="sm"
                       variant={activeCount ? 'filled' : 'default'}
