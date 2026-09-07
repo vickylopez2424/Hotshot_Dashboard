@@ -49,6 +49,55 @@ function incidentIcon(acres) {
   });
 }
 
+const COMPASS = { N:0, NNE:22.5, NE:45, ENE:67.5, E:90, ESE:112.5, SE:135, SSE:157.5, S:180, SSW:202.5, SW:225, WSW:247.5, W:270, WNW:292.5, NW:315, NNW:337.5 };
+const windToDeg = (from) => ((COMPASS[(from || '').toUpperCase()] ?? 0) + 180) % 360;   // arrow points where the wind blows
+
+function windIcon(period) {
+  const calm = !period.wind_dir || period.wind_mph < 1;
+  const deg = windToDeg(period.wind_dir);
+  const len = Math.min(26 + period.wind_mph * 2.2, 70);
+  const arrow = calm ? '' : `<div class="wind-arrow" style="transform:rotate(${deg}deg);--len:${len}px"><span></span></div>`;
+  const label = calm ? 'calm' : `${period.wind_mph} mph ${period.wind_dir}`;
+  return L.divIcon({
+    className: 'wind-icon',
+    html: `<div class="wind-wrap">${arrow}<div class="wind-label${calm ? ' calm' : ''}">${label}</div></div>`,
+    iconSize: [0, 0], iconAnchor: [0, 0],
+  });
+}
+
+const hourLabel = (iso) => {
+  const h = new Date(iso).getHours();
+  return h === 0 ? '12a' : h === 12 ? '12p' : h > 12 ? `${h - 12}p` : `${h}a`;
+};
+
+/* Hourly wind (bars) and humidity (line) for the horizon */
+function WeatherStrip({ periods, activeIndex, onPick }) {
+  if (!periods?.length) return null;
+  const W = 340, H = 64, pad = 4, n = periods.length, bw = (W - pad * 2) / n;
+  const maxW = Math.max(15, ...periods.map(p => p.wind_mph));
+  const rh = periods.map(p => p.rh_pct ?? 0);
+  const rhPath = rh.map((v, i) => `${i === 0 ? 'M' : 'L'}${pad + bw * i + bw / 2},${H - 14 - (v / 100) * (H - 22)}`).join(' ');
+  return (
+    <div className="strip">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        {periods.map((p, i) => {
+          const h = (p.wind_mph / maxW) * (H - 22);
+          const hot = p.rh_pct != null && p.rh_pct < 20 && p.wind_mph >= 15;
+          return (
+            <g key={i} onClick={() => onPick?.(i)} style={{ cursor: 'pointer' }}>
+              <rect x={pad + bw * i + 1} y={H - 14 - h} width={bw - 2} height={h} rx="2"
+                fill={hot ? '#ff5f2e' : i === activeIndex ? '#ffffff' : 'rgba(124,196,255,.55)'} />
+              {(i % Math.ceil(n / 6) === 0) && <text x={pad + bw * i + bw / 2} y={H - 3} textAnchor="middle" fontSize="9" fill="#9aa7b8">{hourLabel(p.time)}</text>}
+            </g>
+          );
+        })}
+        <path d={rhPath} fill="none" stroke="#ffcf5a" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+      <div className="strip-legend"><span><i className="sw wind" /> wind mph</span><span><i className="sw rh" /> humidity %</span><span><i className="sw hot" /> critical</span></div>
+    </div>
+  );
+}
+
 function fmtAcres(a) {
   if (a == null) return '';
   return a >= 10000 ? `${(a / 1000).toFixed(1)}k` : a.toLocaleString();
@@ -60,9 +109,17 @@ function MapEvents({ onPick, disabled }) {
   return null;
 }
 
+/* Fly to the point, but keep it in the part of the map the bottom sheet does not cover */
 function FlyTo({ target, zoom }) {
   const map = useMap();
-  useEffect(() => { if (target) map.flyTo([target.lat, target.lon], zoom ?? Math.max(map.getZoom(), 11), { duration: 0.8 }); }, [target?.lat, target?.lon]);
+  useEffect(() => {
+    if (!target) return;
+    const z = zoom ?? Math.max(map.getZoom(), 11);
+    const phone = window.innerWidth < 900;
+    const sheetH = phone ? (document.querySelector('.sheet')?.offsetHeight || 0) : 0;
+    const pt = map.project([target.lat, target.lon], z).add([0, sheetH / 2]);
+    map.flyTo(map.unproject(pt, z), z, { duration: 0.8 });
+  }, [target?.lat, target?.lon]);
   return null;
 }
 
@@ -72,6 +129,13 @@ function Locate({ trigger }) {
     if (!trigger) return;
     map.locate({ setView: true, maxZoom: 11 });
   }, [trigger]);
+  return null;
+}
+
+/* Report the map zoom so the page can thin out markers when zoomed out */
+function ZoomWatch({ onZoom }) {
+  const map = useMapEvents({ zoomend() { onZoom(map.getZoom()); } });
+  useEffect(() => { onZoom(map.getZoom()); }, []);
   return null;
 }
 
@@ -91,6 +155,9 @@ export default function PredictPage() {
   const [showBasemaps, setShowBasemaps] = useState(false);
   const [locateTick, setLocateTick] = useState(0);
   const [incidents, setIncidents] = useState([]);
+  const [alerts, setAlerts] = useState(null);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [showAlerts, setShowAlerts] = useState(true);
   const [pick, setPick] = useState(null);            // {lat, lon, name?, id?, acres?}
   const [hours, setHours] = useState(12);
   const [weather, setWeather] = useState(null);
@@ -105,6 +172,11 @@ export default function PredictPage() {
     axios.get('/api/wildcad/incidents/map', { params: { min_acres: 1 } })
       .then(r => setIncidents(r.data.features || []))
       .catch(() => setIncidents([]));
+  }, []);
+
+  // Fire weather alerts (red flag warnings, watches) as zone polygons
+  useEffect(() => {
+    axios.get('/api/nws/alerts/map').then(r => setAlerts(r.data)).catch(() => setAlerts(null));
   }, []);
 
   // Weather line when a point is picked or the horizon changes
@@ -162,18 +234,28 @@ export default function PredictPage() {
     return result.features.filter(f => f.properties.time_minutes <= (timeMin ?? result.max_time_minutes));
   }, [result, timeMin]);
   const wx = weather?.summary;
+  const periods = weather?.periods || [];
+  const activeHour = phase === 'done' && result ? Math.max(0, Math.round((timeMin ?? result.max_time_minutes) / 60) - 1) : 0;
+  const activePeriod = periods[Math.min(activeHour, periods.length - 1)];
   const isSample = summary?.source === 'sample' || result?.source === 'sample';
 
   return (
     <div className="predict">
-      <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} zoomControl={false} className="predict-map" attributionControl={false}>
+      <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} minZoom={4} zoomControl={false} className="predict-map" attributionControl={false}>
+        <ZoomWatch onZoom={setZoom} />
         <TileLayer key={basemap} url={BASEMAPS[basemap].url} maxZoom={BASEMAPS[basemap].maxZoom} />
         <MapEvents onPick={onPick} disabled={phase === 'running'} />
         <FlyTo target={pick} />
         <Locate trigger={locateTick} />
         <FitResult result={phase === 'done' ? result : null} />
 
-        {incidents.map(f => {
+        {showAlerts && alerts?.features?.length > 0 && (
+          <GeoJSON key="alerts" data={alerts}
+            style={f => ({ color: f.properties.color || '#cc0000', weight: 1.2, dashArray: '4 3', fillColor: f.properties.color || '#cc0000', fillOpacity: 0.16, opacity: 0.8 })}
+            onEachFeature={(f, layer) => layer.bindTooltip(`<strong>${f.properties.event}</strong><br/>${(f.properties.headline || '').slice(0, 90)}`, { sticky: true })} />
+        )}
+
+        {incidents.filter(f => zoom >= 9 || (f.properties.daily_acres || 0) >= (zoom >= 7 ? 10 : 100)).map(f => {
           const [lon, lat] = f.geometry.coordinates;
           const p = f.properties;
           return (
@@ -188,6 +270,7 @@ export default function PredictPage() {
         ))}
 
         {pick && <Marker position={[pick.lat, pick.lon]} icon={ignitionIcon} />}
+        {pick && activePeriod && <Marker position={[pick.lat, pick.lon]} icon={windIcon(activePeriod)} interactive={false} zIndexOffset={500} />}
       </MapContainer>
 
       {/* Top bar */}
@@ -203,6 +286,8 @@ export default function PredictPage() {
             {Object.entries(BASEMAPS).map(([k, b]) => (
               <button key={k} className={k === basemap ? 'on' : ''} onClick={() => { setBasemap(k); setShowBasemaps(false); }}>{b.label}</button>
             ))}
+            <div className="menu-sep" />
+            <button className={showAlerts ? 'on' : ''} onClick={() => setShowAlerts(v => !v)}>Fire weather alerts{alerts?.total_alerts ? ` (${alerts.total_alerts})` : ''}</button>
           </div>
         )}
       </div>
@@ -255,6 +340,8 @@ export default function PredictPage() {
               )}
             </div>
 
+            <WeatherStrip periods={periods} activeIndex={0} />
+
             {phase === 'error' && (
               <div className="error-box"><AlertTriangle size={16} /> {job?.error || 'The run failed.'}</div>
             )}
@@ -290,6 +377,11 @@ export default function PredictPage() {
                 value={timeMin ?? result.max_time_minutes} onChange={e => setTimeMin(Number(e.target.value))} />
               <span className="mono time">{Math.round((timeMin ?? result.max_time_minutes) / 60)}h</span>
             </div>
+
+            <div className="wx-row small">
+              {activePeriod && <><span><Wind size={14} /> {activePeriod.wind_mph} mph {activePeriod.wind_dir}</span><span><Droplets size={14} /> {activePeriod.rh_pct}% RH</span><span><Thermometer size={14} /> {activePeriod.temp_f}°F</span><span className="dim">at {hourLabel(activePeriod.time)}</span></>}
+            </div>
+            <WeatherStrip periods={periods} activeIndex={activeHour} onPick={i => setTimeMin(Math.min((i + 1) * 60, result.max_time_minutes))} />
 
             <div className="fine">Decision support only. Not a substitute for WFDSS, the IAP, or on-scene judgment.</div>
           </>

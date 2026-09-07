@@ -93,6 +93,7 @@ def _fetch_alerts() -> list:
                     "expires":     props.get("expires", ""),
                     "color":       SEVERITY_COLOR.get(event, "#ff6600"),
                     "geometry":    geom,
+                    "zones":       props.get("affectedZones", []),
                 }
                 all_alerts.append(alert)
         except Exception as e:
@@ -100,6 +101,26 @@ def _fetch_alerts() -> list:
 
     _store("alerts", all_alerts)
     return all_alerts
+
+
+_ZONE_TTL = 86400  # zone outlines do not change
+
+
+def _zone_geometry(zone_url: str):
+    """Fetch and cache one NWS zone outline (fire or public zone)."""
+    key = f"zone:{zone_url}"
+    entry = _cache.get(key)
+    if entry and time.time() - entry["ts"] < _ZONE_TTL:
+        return entry["data"]
+    try:
+        resp = httpx.get(zone_url, headers={"User-Agent": NWS_USER_AGENT, "Accept": "application/geo+json"}, timeout=20)
+        resp.raise_for_status()
+        geom = resp.json().get("geometry")
+    except Exception as e:
+        logger.warning("NWS zone fetch failed for %s: %s", zone_url, e)
+        geom = None
+    _cache[key] = {"data": geom, "ts": time.time()}
+    return geom
 
 
 # ─── Endpoints ────────────────────────────────────────────
@@ -129,13 +150,17 @@ def alerts_map():
         alerts = _fetch_alerts()
         features = []
         for a in alerts:
-            if not a["geometry"]:
+            props = {k: v for k, v in a.items() if k not in ("geometry", "zones")}
+            if a["geometry"]:
+                features.append({"type": "Feature", "geometry": a["geometry"], "properties": props})
                 continue
-            features.append({
-                "type": "Feature",
-                "geometry": a["geometry"],
-                "properties": {k: v for k, v in a.items() if k != "geometry"},
-            })
+            # Most fire weather alerts are issued by zone with no polygon
+            # on the alert itself; draw each affected zone instead.
+            for zone_url in a.get("zones", [])[:40]:
+                geom = _zone_geometry(zone_url)
+                if geom:
+                    features.append({"type": "Feature", "geometry": geom,
+                                     "properties": {**props, "zone": zone_url.rsplit("/", 1)[-1]}})
         return {"type": "FeatureCollection", "features": features, "total_alerts": len(alerts)}
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))

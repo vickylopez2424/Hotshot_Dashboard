@@ -77,3 +77,24 @@
   .sheet::before { display: none; }
   .sample-badge { top: auto; bottom: 22px; left: auto; right: 22px; transform: none; }
 }
+
+/* wind arrow at the ignition point */
+.wind-icon { background: none; border: none; }
+.wind-wrap { position: relative; width: 0; height: 0; }
+.wind-arrow { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.wind-arrow span { position: absolute; left: -2px; top: 18px; width: 4px; height: var(--len); border-radius: 2px;
+  background: linear-gradient(180deg, rgba(124,196,255,0) 0%, #7cc4ff 60%, #fff 100%); box-shadow: 0 0 8px rgba(124,196,255,.8); animation: gust 1.4s ease-in-out infinite; }
+.wind-arrow span::after { content: ''; position: absolute; left: -6px; bottom: -6px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid #fff; filter: drop-shadow(0 0 4px rgba(124,196,255,.9)); }
+@keyframes gust { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+.wind-label { position: absolute; left: 14px; top: -34px; white-space: nowrap; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #0b0f14; background: #7cc4ff; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+
+/* hourly strip */
+.strip { margin-top: 12px; }
+.strip svg { width: 100%; height: 64px; display: block; }
+.strip-legend { display: flex; gap: 14px; margin-top: 4px; font-size: 10px; color: #6b7686; }
+.strip-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.sw { display: inline-block; width: 10px; height: 6px; border-radius: 2px; }
+.sw.wind { background: rgba(124,196,255,.7); } .sw.rh { background: #ffcf5a; height: 2px; } .sw.hot { background: #ff5f2e; }
+.wx-row.small { font-size: 13px; margin-top: 10px; }
+.menu-sep { height: 1px; background: rgba(255,255,255,.1); margin: 4px 2px; }
+.wind-label.calm { background: rgba(255,255,255,.85); }
