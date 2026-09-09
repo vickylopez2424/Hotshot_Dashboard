@@ -262,6 +262,32 @@ async function prefetchTiles(urlTemplate, bounds, onProgress) {
   return tiles.length;
 }
 
+/* Every on-device run is posted to the server for the science record; queued until there is signal */
+const QUEUE_KEY = 'record-queue';
+function deviceId() {
+  try {
+    let id = localStorage.getItem('hotshot.deviceId');
+    if (!id) { id = 'dev-' + Math.random().toString(36).slice(2, 10); localStorage.setItem('hotshot.deviceId', id); }
+    return id;
+  } catch { return 'dev-unknown'; }
+}
+async function queueRecord(rec) {
+  const q = (await getSnapshot(QUEUE_KEY).catch(() => null)) || [];
+  q.push(rec);
+  await saveSnapshot(QUEUE_KEY, q.slice(-50));
+}
+async function flushRecords() {
+  const q = (await getSnapshot(QUEUE_KEY).catch(() => null)) || [];
+  if (!q.length) return 0;
+  const left = [];
+  for (const rec of q) {
+    try { await axios.post('/api/predict/record', rec, { timeout: 20000 }); }
+    catch (e) { if (isNetworkError(e)) left.push(rec); /* a 4xx means the server rejected it; drop it */ }
+  }
+  await saveSnapshot(QUEUE_KEY, left);
+  return q.length - left.length;
+}
+
 function CenterWatch({ onMove }) {
   const map = useMapEvents({ moveend() { const c = map.getCenter(); onMove({ lat: c.lat, lon: c.lng }); } });
   return null;
@@ -314,7 +340,8 @@ export default function PredictPage() {
   const [mapCenter, setMapCenter] = useState({ lat: DEFAULT_CENTER[0], lon: DEFAULT_CENTER[1] });
   const refreshPacks = useCallback(() => listPacks().then(setPacks).catch(() => setPacks([])), []);
   useEffect(() => {
-    const up = () => setOnline(true), down = () => setOnline(false);
+    const up = () => { setOnline(true); flushRecords().catch(() => {}); }, down = () => setOnline(false);
+    flushRecords().catch(() => {});
     window.addEventListener('online', up); window.addEventListener('offline', down);
     refreshPacks();
     return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); };
@@ -387,6 +414,10 @@ export default function PredictPage() {
       if (!summary) throw new Error('The fire did not spread from this point on the stored fuels. Try tapping nearby brush, grass or timber.');
       setEngineUsed('device');
       setJob({ status: 'done', step: 'Done', result, summary, engine: 'device', pack: { key: pk.key, ageHours: pk.ageHours, weatherAgeHours: weather?.age_hours ?? null } });
+      const rec = { lat: pick.lat, lon: pick.lon, hours, engine: 'ondevice', result, summary, weather: { source: wxObj.source || 'stored pack forecast', periods: wxObj.periods },
+        incident_id: pick.id || null, incident_name: pick.name || null, device_id: deviceId(), client_created: new Date().toISOString(),
+        pack_landfire_version: pk.meta?.landfire_version || null, engine_version: 'ondevice-rothermel 1.0' };
+      queueRecord(rec).then(() => { if (navigator.onLine) flushRecords().catch(() => {}); }).catch(() => {});
       setPhase('done');
       setTimeMin(Math.max(0, ...result.features.map(f => f.properties.time_minutes)));
     } catch (e) {

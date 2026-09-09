@@ -17,3 +17,6 @@ geopandas==0.14.2
 shapely==2.0.2
 numpy==1.26.3
 pyproj==3.6.1
+
+# ── Science export to The Wildfire Database (scripts/export_to_wildfire_db.py) ──
+duckdb>=1.1

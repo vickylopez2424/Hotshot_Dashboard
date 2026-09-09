@@ -9,6 +9,7 @@ Predict: the one-question API behind the Predict screen.
 Engines live in engines.py. Until ELMFIRE is connected, `engine` defaults to
 "sample" and every response carries source="sample" so the UI can say so.
 """
+import json
 import logging
 import shutil
 import subprocess
@@ -40,6 +41,17 @@ def _elmfire_ready() -> bool:
         return False
 
 
+def _code_sha() -> str:
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5,
+                             cwd=str(__import__("pathlib").Path(__file__).resolve().parents[3]))
+        return out.stdout.strip() or "unknown"
+    except Exception:
+        return "unknown"
+
+
+CODE_SHA = _code_sha()
+ENGINE_VERSIONS = {"elmfire": "elmfire 1.1 (native docker build)", "sample": "sample shape", "ondevice": "ondevice-rothermel 1.0"}
 ELMFIRE_READY = _elmfire_ready()
 DEFAULT_ENGINE = "elmfire" if ELMFIRE_READY else "sample"
 ALLOWED_HOURS = (6, 12, 24)
@@ -52,6 +64,23 @@ class PredictRequest(BaseModel):
     incident_id: Optional[str] = None
     incident_name: Optional[str] = None
     engine: Optional[str] = None
+
+
+class RecordRequest(BaseModel):
+    """A simulation that already ran on a phone, posted when signal returns."""
+    lat: float = Field(..., ge=-90, le=90)
+    lon: float = Field(..., ge=-180, le=180)
+    hours: int
+    engine: str = "ondevice"
+    result: dict
+    summary: Optional[dict] = None
+    weather: Optional[dict] = None
+    incident_id: Optional[str] = None
+    incident_name: Optional[str] = None
+    device_id: Optional[str] = None
+    client_created: Optional[str] = None
+    pack_landfire_version: Optional[str] = None
+    engine_version: Optional[str] = None
 
 
 class PredictConnector(BasePlatformConnector):
@@ -78,7 +107,12 @@ def _run(jid: str):
         result = engine(job["lat"], job["lon"], job["hours"], w,
                         progress=lambda step: jobs.update(jid, step=step))
         summary = summarize_result(result, job["lat"], job["lon"], w_sum)
-        jobs.update(jid, status="done", step="Done", result=result, summary=summary)
+        run = result.get("run") or {}
+        jobs.update(jid, status="done", step="Done", result=result, summary=summary,
+                    origin="app", engine_version=ENGINE_VERSIONS.get(job["engine"], job["engine"]), code_sha=CODE_SHA,
+                    landfire_version=run.get("landfire_version"), weather_source=w.get("source"),
+                    ignition_used=json.dumps(run.get("ignition_used")) if run.get("ignition_used") else None,
+                    ignition_snap_m=run.get("ignition_snap_m"), domain_km=run.get("domain_km"), cell_m=run.get("cell_size_m"))
     except EngineUnavailable as e:
         jobs.update(jid, status="model_unavailable", step="Model not connected", error=str(e))
     except (wx.WeatherUnavailable, NoSpread) as e:
@@ -117,6 +151,27 @@ def create(req: PredictRequest, background: BackgroundTasks, user: dict = Depend
     jid = jobs.create(req.lat, req.lon, req.hours, engine, req.incident_id, req.incident_name, user_id)
     threading.Thread(target=_run, args=(jid,), daemon=True, name=f"predict-{jid}").start()
     return {"job_id": jid, "status": "queued", "engine": engine}
+
+
+@router.post("/record")
+def record_run(req: RecordRequest, user: dict = Depends(get_approved_user)):
+    """Store an on-device run so the science record is complete."""
+    if len(json.dumps(req.result)) > 4_000_000:
+        raise HTTPException(413, "result too large")
+    run = req.result.get("run") or {}
+    jid = jobs.record(lat=req.lat, lon=req.lon, hours=req.hours, engine=req.engine, result=req.result, summary=req.summary,
+                      weather=req.weather, origin="app", user_id=(user or {}).get("sub") or (user or {}).get("id"),
+                      incident_id=req.incident_id, incident_name=req.incident_name,
+                      engine_version=req.engine_version or ENGINE_VERSIONS.get("ondevice"), code_sha=CODE_SHA,
+                      landfire_version=req.pack_landfire_version, weather_source=(req.weather or {}).get("source") or "stored pack forecast",
+                      ignition_used=run.get("ignition_used"), ignition_snap_m=run.get("ignition_snap_m"),
+                      domain_km=run.get("domain_km"), cell_m=30, device_id=req.device_id, client_created=req.client_created)
+    return {"job_id": jid, "status": "recorded"}
+
+
+@router.get("/benchmarks")
+def list_benchmarks(fire: Optional[str] = None):
+    return {"benchmarks": jobs.benchmarks(fire)}
 
 
 @router.get("")
