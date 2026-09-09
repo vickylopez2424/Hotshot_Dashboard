@@ -53,3 +53,6 @@ api_keys.json
 prediction/elmfire-docker/outputs/
 backend/data/landfire_cache/
 backend/data/elmfire_outputs/predict_*/
+backend/data/elmfire_runs/
+backend/data/predict_jobs.db
+frontend/ios/App/build/
