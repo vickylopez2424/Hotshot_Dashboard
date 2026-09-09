@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
+from integrations.predict import docker_api
 import numpy as np
 import rasterio
 from pyproj import Transformer
@@ -135,6 +136,16 @@ SCRATCH                        = './scratch'
 
 class DockerUnavailable(RuntimeError):
     """Docker daemon or the elmfire image is missing. engines.py maps this to EngineUnavailable."""
+
+
+class NoSpread(RuntimeError):
+    """The model ran but nothing burned. Message is written for the screen."""
+
+
+FBFM40_NAMES = {91: "urban or developed", 92: "snow or ice", 93: "agriculture", 98: "open water", 99: "barren",
+                101: "short sparse dry grass", 102: "low load dry grass", 121: "low load grass shrub",
+                141: "low load dry shrub", 161: "light timber understory", 181: "low load timber litter",
+                201: "low load slash"}
 
 
 class LandfireError(RuntimeError):
@@ -427,29 +438,93 @@ def write_elmfire_data(path: Path, hours: int, nbands: int, x_ign: float, y_ign:
 
 # ── 5. run ─────────────────────────────────────────────────────────────────
 def check_docker():
+    """Prefer the daemon socket; fall back to the CLI only when no socket exists."""
+    try:
+        d = docker_api.Docker()
+    except docker_api.DockerUnavailable:
+        return _check_docker_cli()
+    d.ping()
+    if not d.image_exists(IMAGE):
+        raise DockerUnavailable(f"Docker image {IMAGE} not found. Build it with: "
+                                f"cd prediction/elmfire-docker && docker build -t {IMAGE} .")
+
+
+def _check_docker_cli():
     if not RUNNER.exists() or not os.access(RUNNER, os.X_OK):
         raise DockerUnavailable(f"ELMFIRE runner missing or not executable: {RUNNER}")
     if shutil.which("docker") is None:
         raise DockerUnavailable("docker CLI not found on PATH. Start Colima or Docker Desktop.")
     r = None
-    for attempt in range(3):  # the daemon check occasionally fails once with an empty stderr; retry before giving up
+    for attempt in range(3):
         try:
             r = subprocess.run(["docker", "image", "inspect", IMAGE], capture_output=True, text=True, timeout=30)
         except (OSError, subprocess.TimeoutExpired) as e:
             raise DockerUnavailable(f"docker is not responding: {e}") from e
         if r.returncode == 0:
-            break
+            return
         logger.warning("docker image inspect attempt %d failed rc=%s stderr=%r", attempt + 1, r.returncode, (r.stderr or "")[:200])
         time.sleep(1.5)
-    if r.returncode != 0:
-        err = (r.stderr or "").strip()
-        if "no such image" in err.lower():
-            raise DockerUnavailable(f"Docker image {IMAGE} not found. Build it with: "
-                                    f"cd prediction/elmfire-docker && docker build -t {IMAGE} .")
-        raise DockerUnavailable(f"Docker is not responding (is Colima or Docker Desktop running?): {err[:200]}")
+    err = (r.stderr or "").strip()
+    if "no such image" in err.lower():
+        raise DockerUnavailable(f"Docker image {IMAGE} not found. Build it with: "
+                                f"cd prediction/elmfire-docker && docker build -t {IMAGE} .")
+    raise DockerUnavailable(f"Docker is not responding (is Colima or Docker Desktop running?): {err[:200]}")
+
+
+CONTAINER_SCRIPT = r"""
+set -e
+"elmfire_${ELMFIRE_VER}" ./inputs/elmfire.data
+for f in ./outputs/*.bil; do
+  [ -e "$f" ] || continue
+  b=$(basename "$f" .bil)
+  if [ -n "$A_SRS" ]; then
+    gdal_translate -q -a_srs "$A_SRS" -co COMPRESS=DEFLATE -co ZLEVEL=6 "$f" "./outputs/$b.tif"
+  else
+    gdal_translate -q -co COMPRESS=DEFLATE -co ZLEVEL=6 "$f" "./outputs/$b.tif"
+  fi
+done
+for f in ./outputs/vs_*.tif; do
+  [ -e "$f" ] && cp "$f" "./outputs/spread_rate_${f##*/vs_}"
+done
+rm -f ./outputs/*.bil ./outputs/*.hdr ./outputs/*.csv
+rm -rf ./scratch/*
+"""
+MODEL_TIMEOUT_S = int(os.environ.get("ELMFIRE_TIMEOUT", "180"))
 
 
 def run_model(run_dir: Path) -> float:
+    t = time.time()
+    try:
+        d = docker_api.Docker()
+    except docker_api.DockerUnavailable:
+        return _run_model_cli(run_dir)
+
+    run_dir = run_dir.resolve()
+    (run_dir / "outputs").mkdir(exist_ok=True)
+    (run_dir / "scratch").mkdir(exist_ok=True)
+    for f in (run_dir / "outputs").iterdir():
+        f.unlink()
+    shutil.rmtree(run_dir / "scratch", ignore_errors=True)
+    (run_dir / "scratch").mkdir(exist_ok=True)
+    a_srs = ""
+    if (run_dir / "a_srs.txt").exists():
+        a_srs = (run_dir / "a_srs.txt").read_text().strip()
+    name = "elmfire_" + re.sub(r"[^A-Za-z0-9_.-]", "_", run_dir.name)
+
+    code, logs, timed_out = d.run(IMAGE, ["bash", "-c", CONTAINER_SCRIPT], binds=[f"{run_dir}:/run"],
+                                  env=[f"A_SRS={a_srs}"], workdir="/run", name=name, timeout_s=MODEL_TIMEOUT_S)
+    (run_dir / "run.log").write_text(logs)
+    tail = logs.strip()[-1500:]
+    if timed_out:
+        raise RuntimeError(f"ELMFIRE timed out after {MODEL_TIMEOUT_S} s in {run_dir}:\n{tail}")
+    if code != 0:
+        raise RuntimeError(f"ELMFIRE exited {code} in {run_dir}:\n{tail}")
+    if not list((run_dir / "outputs").glob("time_of_arrival_*.tif")):
+        raise RuntimeError(f"ELMFIRE finished but wrote no time_of_arrival raster in {run_dir}/outputs:\n{tail}")
+    return time.time() - t
+
+
+def _run_model_cli(run_dir: Path) -> float:
     t = time.time()
     try:
         r = subprocess.run([str(RUNNER), str(run_dir)], capture_output=True, text=True, timeout=240)
@@ -519,6 +594,19 @@ def run(lat: float, lon: float, hours: int, weather: dict, progress=None, run_id
     if not toa:
         raise RuntimeError(f"No time_of_arrival raster in {out_dir}")
     geo = process_time_of_arrival(str(toa[-1]))
+    if geo.get("error") or not geo.get("features"):
+        row, col = dom.index(dom.x_ign, dom.y_ign)
+        code = int(layers["fbfm40"][row, col])
+        moved = f" even after moving the ignition {snap_m:.0f} m to the nearest fuel" if snap_m else ""
+        if BURNABLE_MIN <= code <= BURNABLE_MAX:
+            first = (weather.get("periods") or [{}])[0]
+            raise NoSpread(f"The fire did not spread from this point{moved}. The fuel here is burnable "
+                           f"(LANDFIRE model {code}) but with {first.get('rh_pct', '?')}% humidity and "
+                           f"{first.get('wind_mph', '?')} mph wind the model says it will not carry. "
+                           f"Conditions may be too wet, or try a drier hour.")
+        raise NoSpread(f"The fire did not spread from this point{moved}. LANDFIRE fuel model {code} "
+                       f"({FBFM40_NAMES.get(code, 'non-burnable or sparse fuel')}) at the tap. "
+                       f"Try tapping on nearby brush, grass or timber.")
     if "error" in geo:
         raise RuntimeError(f"time_of_arrival post-processing failed for {toa[-1]}: {geo['error']}")
 

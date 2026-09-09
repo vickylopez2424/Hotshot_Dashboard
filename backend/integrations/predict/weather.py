@@ -12,6 +12,10 @@ import httpx
 from config import NWS_BASE_URL, NWS_USER_AGENT
 
 logger = logging.getLogger(__name__)
+
+
+class WeatherUnavailable(RuntimeError):
+    """A message a firefighter can read; the connector shows it as-is."""
 _cache: dict = {}
 TTL = 900
 
@@ -37,11 +41,19 @@ def hourly(lat: float, lon: float, hours: int = 24) -> dict:
     headers = {"User-Agent": NWS_USER_AGENT, "Accept": "application/geo+json"}
     with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as c:
         p = c.get(f"{NWS_BASE_URL}/points/{lat:.4f},{lon:.4f}")
+        if p.status_code == 404:
+            raise WeatherUnavailable("No National Weather Service forecast here. Predictions cover the United States only.")
         p.raise_for_status()
         props = p.json()["properties"]
+        if not props.get("forecastHourly"):
+            raise WeatherUnavailable("No hourly fire weather forecast for this point. It is probably over water. Tap on land.")
         f = c.get(props["forecastHourly"])
+        if f.status_code in (404, 500, 503):
+            raise WeatherUnavailable(f"The weather service has no hourly forecast for this point right now (HTTP {f.status_code}). Try again in a few minutes.")
         f.raise_for_status()
         periods = f.json()["properties"]["periods"]
+        if not periods:
+            raise WeatherUnavailable("The weather service returned an empty forecast for this point.")
 
     out = []
     for per in periods[:max(hours, 48)]:

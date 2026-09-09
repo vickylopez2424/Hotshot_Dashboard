@@ -22,6 +22,7 @@ from auth import get_approved_user
 from integrations.base import BasePlatformConnector
 from integrations.predict import jobs, weather as wx
 from integrations.predict.engines import ENGINES, EngineUnavailable, summarize_result
+from integrations.predict.elmfire_pipeline import NoSpread
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -79,9 +80,13 @@ def _run(jid: str):
         jobs.update(jid, status="done", step="Done", result=result, summary=summary)
     except EngineUnavailable as e:
         jobs.update(jid, status="model_unavailable", step="Model not connected", error=str(e))
+    except (wx.WeatherUnavailable, NoSpread) as e:
+        # written for the screen, no exception name in front
+        jobs.update(jid, status="failed", step="No prediction", error=str(e))
     except Exception as e:
         logger.error("predict job %s failed: %s\n%s", jid, e, traceback.format_exc())
-        jobs.update(jid, status="failed", step="Failed", error=f"{type(e).__name__}: {e}")
+        msg = str(e).splitlines()[0][:220] if str(e) else type(e).__name__
+        jobs.update(jid, status="failed", step="Failed", error=f"The run failed: {msg}")
 
 
 @router.get("/status")
@@ -93,8 +98,10 @@ def status():
 def weather(lat: float, lon: float, hours: int = 12):
     try:
         w = wx.hourly(lat, lon, hours)
+    except wx.WeatherUnavailable as e:
+        raise HTTPException(422, str(e))
     except Exception as e:
-        raise HTTPException(502, f"NWS weather unavailable: {e}")
+        raise HTTPException(502, f"Weather service unavailable: {str(e)[:160]}")
     return {"summary": wx.summarize(w["periods"]), "source": w["source"], "grid": w["station"], "periods": w["periods"]}
 
 
