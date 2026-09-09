@@ -12,11 +12,12 @@
 # stored. Create one App Store profile for com.nbtechai.hotshot once, in the portal.
 name: iOS TestFlight
 
+# Manual only until the Apple secrets exist. Once they do, add back:
+#   push:
+#     branches: [main]
+#     paths: ["frontend/**", ".github/workflows/ios-testflight.yml"]
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["frontend/**", ".github/workflows/ios-testflight.yml"]
 
 concurrency:
   group: ios-testflight
