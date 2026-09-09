@@ -38,8 +38,8 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
       style={{ height: '100%', width: '100%', background: '#dfe2e0' }}
     >
       <LayersControl position="topright">
-        {/* Base layers — Topographic default for the Watch Duty look */}
-        <LayersControl.BaseLayer checked name="Topographic">
+        {/* Satellite imagery is the default; terrain maps remain available. */}
+        <LayersControl.BaseLayer name="Topographic">
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
             attribution="ESRI World Topographic"
@@ -65,7 +65,7 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
           />
         </LayersControl.BaseLayer>
 
-        <LayersControl.BaseLayer name="Satellite (ESRI)">
+        <LayersControl.BaseLayer checked name="Satellite (ESRI)">
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution="ESRI World Imagery"
@@ -87,7 +87,7 @@ function MapView({ elmfireTime, selectedIncident, landfireLayer, landfireOpacity
         </LayersControl.BaseLayer>
       </LayersControl>
 
-      {/* Platform overlay layers — each controlled by sidebar toggles */}
+      {/* Platform overlay layers, each controlled by sidebar toggles */}
       {isLayerActive('firms')   && <ActiveFireLayer />}
       {isLayerActive('elmfire') && (
         <ElmfireLayer currentTimeMinutes={elmfireTime} />

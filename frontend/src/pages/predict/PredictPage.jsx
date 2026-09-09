@@ -16,7 +16,7 @@ import L from 'leaflet';
 import axios from 'axios';
 import {
   Flame, Wind, Droplets, Thermometer, Crosshair, Layers, LocateFixed,
-  ChevronRight, Compass, Ruler, X, LayoutDashboard, AlertTriangle, Clock,
+  ChevronRight, Compass, Ruler, X, LayoutDashboard, AlertTriangle, Clock, ExternalLink,
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './PredictPage.css';
@@ -44,7 +44,7 @@ function incidentIcon(acres) {
   const size = acres >= 1000 ? 34 : acres >= 100 ? 28 : 22;
   return L.divIcon({
     className: 'incident-icon',
-    html: `<div class="incident-flame" style="width:${size}px;height:${size}px;font-size:${size * 0.62}px">🔥</div>`,
+    html: `<div class="incident-flame" style="width:${size}px;height:${size}px"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M13 3c1 5-3 5-2 9-2-1-3-3-3-3-4 5-3 11 3 12 7 1 10-7 5-12 0 3-2 4-2 4 1-4 0-7-1-10Z" fill="currentColor"/></svg></div>`,
     iconSize: [size, size], iconAnchor: [size / 2, size / 2],
   });
 }
@@ -86,12 +86,12 @@ function WeatherStrip({ periods, activeIndex, onPick }) {
           return (
             <g key={i} onClick={() => onPick?.(i)} style={{ cursor: 'pointer' }}>
               <rect x={pad + bw * i + 1} y={H - 14 - h} width={bw - 2} height={h} rx="2"
-                fill={hot ? '#ff5f2e' : i === activeIndex ? '#ffffff' : 'rgba(124,196,255,.55)'} />
-              {(i % Math.ceil(n / 6) === 0) && <text x={pad + bw * i + bw / 2} y={H - 3} textAnchor="middle" fontSize="9" fill="#9aa7b8">{hourLabel(p.time)}</text>}
+                fill={hot ? '#ff5f2e' : i === activeIndex ? '#293f4b' : '#638398'} />
+              {(i % Math.ceil(n / 6) === 0) && <text x={pad + bw * i + bw / 2} y={H - 3} textAnchor="middle" fontSize="9" fill="#596259">{hourLabel(p.time)}</text>}
             </g>
           );
         })}
-        <path d={rhPath} fill="none" stroke="#ffcf5a" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d={rhPath} fill="none" stroke="#9b6d23" strokeWidth="1.6" strokeLinejoin="round" />
       </svg>
       <div className="strip-legend"><span><i className="sw wind" /> wind mph</span><span><i className="sw rh" /> humidity %</span><span><i className="sw hot" /> critical</span></div>
     </div>
@@ -185,10 +185,11 @@ function FitResult({ result }) {
 
 /* Page ------------------------------------------------------------------ */
 export default function PredictPage() {
-  const [basemap, setBasemap] = useState('topo');
+  const [basemap, setBasemap] = useState('sat');
   const [showBasemaps, setShowBasemaps] = useState(false);
   const [locateTick, setLocateTick] = useState(0);
   const [incidents, setIncidents] = useState([]);
+  const [incidentsUpdated, setIncidentsUpdated] = useState(null);
   const [alerts, setAlerts] = useState(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [showAlerts, setShowAlerts] = useState(true);
@@ -198,13 +199,15 @@ export default function PredictPage() {
   const [weatherErr, setWeatherErr] = useState(null);
   const [job, setJob] = useState(null);              // full job record
   const [phase, setPhase] = useState('idle');        // idle | ready | running | done | error
+  const [sheetCollapsed, setSheetCollapsed] = useState(false);
+  const sheetTouch = useRef(null);
   const [timeMin, setTimeMin] = useState(null);
   const pollRef = useRef(null);
 
   // Incidents on the map
   useEffect(() => {
     axios.get('/api/wildcad/incidents/map', { params: { min_acres: 1 } })
-      .then(r => setIncidents(r.data.features || []))
+      .then(r => { setIncidents(r.data.features || []); setIncidentsUpdated(new Date()); })
       .catch(() => setIncidents([]));
   }, []);
 
@@ -224,6 +227,7 @@ export default function PredictPage() {
 
   const onPick = useCallback((p) => {
     if (phase === 'running') return;
+    setSheetCollapsed(false);
     setJob(null); setPhase('ready'); setTimeMin(null);
     setPick(p);
   }, [phase]);
@@ -249,7 +253,7 @@ export default function PredictPage() {
           if (['done', 'failed', 'model_unavailable'].includes(j.status)) {
             clearInterval(pollRef.current);
             setPhase(j.status === 'done' ? 'done' : 'error');
-            if (j.status === 'done') setTimeMin(j.result.max_time_minutes);
+            if (j.status === 'done') setTimeMin(Math.max(0, ...(j.result?.features || []).map(f => f.properties.time_minutes)));
           }
         } catch { /* keep polling */ }
       }, 1200);
@@ -263,6 +267,7 @@ export default function PredictPage() {
   const result = job?.result;
   const summary = job?.summary;
   const steps = result?.features?.length || 0;
+  const lastContourMinute = Math.max(0, ...(result?.features || []).map(f => f.properties.time_minutes));
   const visible = useMemo(() => {
     if (!result) return [];
     return result.features.filter(f => f.properties.time_minutes <= (timeMin ?? result.max_time_minutes));
@@ -310,11 +315,12 @@ export default function PredictPage() {
 
       {/* Top bar */}
       <div className="predict-top">
-        <div className="brand"><Flame size={18} /><span>Hotshot</span></div>
+        <div className="brand"><span className="brand-symbol"><Flame size={21} strokeWidth={1.8} /></span><span className="brand-name">HOTSHOT<small>FIRE / FIELD MAP</small></span></div>
         <div className="top-actions">
-          <button className="icon-btn" title="My location" onClick={() => setLocateTick(t => t + 1)}><LocateFixed size={20} /></button>
-          <button className={`icon-btn ${showBasemaps ? 'on' : ''}`} title="Map style" onClick={() => setShowBasemaps(s => !s)}><Layers size={20} /></button>
-          <Link className="icon-btn" title="Analyst dashboard" to="/dashboard"><LayoutDashboard size={20} /></Link>
+          <a className="icon-btn" href="https://app.watchduty.org" target="_blank" rel="noopener noreferrer" title="Open Watch Duty situational awareness (new tab)" aria-label="Open Watch Duty situational awareness (new tab)"><ExternalLink size={18} /><span>Watch Duty</span></a>
+          <button className="icon-btn" title="My location" onClick={() => setLocateTick(t => t + 1)}><LocateFixed size={18} /><span>Locate</span></button>
+          <button className={`icon-btn ${showBasemaps ? 'on' : ''}`} title="Map style" onClick={() => setShowBasemaps(s => !s)}><Layers size={18} /><span>Layers</span></button>
+          <Link className="icon-btn" title="Analyst dashboard" to="/dashboard"><LayoutDashboard size={18} /><span>Dashboard</span></Link>
         </div>
         {showBasemaps && (
           <div className="basemap-menu">
@@ -327,6 +333,14 @@ export default function PredictPage() {
         )}
       </div>
 
+      <div className="map-status" aria-label="Incident feed status">
+        <span className="status-mark" />
+        <span>INCIDENTS</span>
+        <strong>{incidents.length ? incidents.length.toLocaleString() : '...'}</strong>
+        <span className="status-source">NIFC / IRWIN</span>
+        {incidentsUpdated && <time dateTime={incidentsUpdated.toISOString()}>updated {incidentsUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>}
+      </div>
+
       <InstallHint />
 
       {/* Sample badge */}
@@ -335,12 +349,30 @@ export default function PredictPage() {
       )}
 
       {/* Bottom sheet */}
-      <div className={`sheet phase-${phase}`}>
+      <div className={`sheet phase-${phase}${sheetCollapsed ? ' collapsed' : ''}`}>
+        <button className="sheet-toggle" aria-expanded={!sheetCollapsed} aria-controls="prediction-details"
+          onClick={() => setSheetCollapsed(v => !v)}
+          onTouchStart={e => { sheetTouch.current = e.touches[0].clientY; }}
+          onTouchEnd={e => {
+            if (sheetTouch.current == null) return;
+            const delta = e.changedTouches[0].clientY - sheetTouch.current;
+            sheetTouch.current = null;
+            if (Math.abs(delta) > 30) {
+              e.preventDefault();
+              setSheetCollapsed(delta > 0);
+            }
+          }}
+          onTouchCancel={() => { sheetTouch.current = null; }}>
+          <span className="sheet-grip" />
+          {sheetCollapsed ? 'Show prediction controls' : 'Hide controls'}
+        </button>
+        <div id="prediction-details" hidden={sheetCollapsed}>
         {phase === 'idle' && (
           <>
-            <div className="sheet-title">Where is the fire?</div>
-            <div className="sheet-sub">Tap the map where it started, or tap a <span className="flame-inline">🔥</span> incident.</div>
-            <div className="hint-row"><Crosshair size={16} /> Use the locate button to jump to where you are.</div>
+            <div className="field-eyebrow">SPREAD SIMULATION</div>
+            <div className="sheet-title">Choose an ignition point.</div>
+            <div className="sheet-sub">Select an incident or place an ignition point on the map.</div>
+            <div className="hint-row"><Crosshair size={16} /> Locate brings the map to your position.</div>
           </>
         )}
 
@@ -356,10 +388,10 @@ export default function PredictPage() {
               <button className="icon-btn ghost" onClick={reset} title="Start over"><X size={18} /></button>
             </div>
 
-            <div className="label">How far ahead</div>
+            <div className="label">Forecast duration</div>
             <div className="chips">
               {HORIZONS.map(h => (
-                <button key={h} className={`chip ${hours === h ? 'on' : ''}`} disabled={phase === 'running'} onClick={() => setHours(h)}>{h}h</button>
+                <button key={h} className={`chip ${hours === h ? 'on' : ''}`} disabled={phase === 'running'} onClick={() => setHours(h)}>{h}<span className="chip-unit"> hours</span></button>
               ))}
             </div>
 
@@ -386,17 +418,30 @@ export default function PredictPage() {
             <button className="run-btn" onClick={run} disabled={phase === 'running' || !weather}>
               {phase === 'running'
                 ? <><span className="spinner" /> {job?.step || 'Running'}</>
-                : <><Flame size={20} /> Predict {hours} hours <ChevronRight size={20} /></>}
+                : <><Flame size={20} /> Run {hours}h simulation <ChevronRight size={20} /></>}
             </button>
           </>
         )}
 
-        {phase === 'done' && result && summary && (
+        {phase === 'done' && result && steps === 0 && (
+          <>
+            <div className="sheet-head">
+              <div className="sheet-title">No modeled fire outline</div>
+              <button className="icon-btn ghost" onClick={reset} title="New prediction"><X size={18} /></button>
+            </div>
+            <div className="error-box" role="status"><AlertTriangle size={16} />
+              The model finished, but returned no fire-outline polygons for this location and weather. This does not mean the area cannot burn. The run needs input and model-output review.
+            </div>
+            <button className="run-btn" onClick={reset}>Choose another location</button>
+          </>
+        )}
+
+        {phase === 'done' && result && summary && steps > 0 && (
           <>
             <div className="sheet-head">
               <div>
                 <div className="sheet-title">{pick?.name || 'Prediction'} · {hours}h</div>
-                <div className="sheet-sub">Cumulative burned area by hour</div>
+                <div className="sheet-sub">Modeled footprint · cumulative by hour</div>
               </div>
               <button className="icon-btn ghost" onClick={reset} title="New prediction"><X size={18} /></button>
             </div>
@@ -409,16 +454,16 @@ export default function PredictPage() {
 
             <div className="slider-row">
               <Clock size={16} />
-              <input type="range" min={result.features[0]?.properties.time_minutes || 60} max={result.max_time_minutes}
+              <input type="range" min={result.features[0]?.properties.time_minutes || 60} max={lastContourMinute}
                 step={result.features[1] ? result.features[1].properties.time_minutes - result.features[0].properties.time_minutes : 60}
-                value={timeMin ?? result.max_time_minutes} onChange={e => setTimeMin(Number(e.target.value))} />
-              <span className="mono time">{Math.round((timeMin ?? result.max_time_minutes) / 60)}h</span>
+                value={timeMin ?? lastContourMinute} onChange={e => setTimeMin(Number(e.target.value))} />
+              <span className="mono time">{Math.round((timeMin ?? lastContourMinute) / 60)}h</span>
             </div>
 
             <div className="wx-row small">
               {activePeriod && <><span><Wind size={14} /> {activePeriod.wind_mph} mph {activePeriod.wind_dir}</span><span><Droplets size={14} /> {activePeriod.rh_pct}% RH</span><span><Thermometer size={14} /> {activePeriod.temp_f}°F</span><span className="dim">at {hourLabel(activePeriod.time)}</span></>}
             </div>
-            <WeatherStrip periods={periods} activeIndex={activeHour} onPick={i => setTimeMin(Math.min((i + 1) * 60, result.max_time_minutes))} />
+            <WeatherStrip periods={periods} activeIndex={activeHour} onPick={i => setTimeMin(Math.min((i + 1) * 60, lastContourMinute))} />
 
             {runInfo && (
               <div className="run-meta">
@@ -429,6 +474,8 @@ export default function PredictPage() {
             <div className="fine">Decision support only. Not a substitute for WFDSS, the IAP, or on-scene judgment.</div>
           </>
         )}
+        <div className="field-credit">Website by <a href="https://nbtechai.com" target="_blank" rel="noopener noreferrer">NB Tech AI Solutions</a></div>
+        </div>
       </div>
     </div>
   );
