@@ -591,6 +591,18 @@ def run(lat: float, lon: float, hours: int, weather: dict, progress=None, run_id
         shutil.copy2(f, out_dir / f.name)
     shutil.copy2(inputs / "elmfire.data", out_dir / "elmfire.data")
     toa = sorted(out_dir.glob("time_of_arrival_*.tif"))
+    # ELMFIRE sometimes writes a second, empty dump one second past TSTOP; pick
+    # the raster that actually holds burned cells (the most), not the last name.
+    if len(toa) > 1:
+        def burned(path):
+            try:
+                import rasterio
+                with rasterio.open(path) as ds:
+                    a = ds.read(1)
+                    return int(((a > 0) & (a != ds.nodata)).sum()) if ds.nodata is not None else int((a > 0).sum())
+            except Exception:
+                return -1
+        toa = sorted(toa, key=burned)
     if not toa:
         raise RuntimeError(f"No time_of_arrival raster in {out_dir}")
     geo = process_time_of_arrival(str(toa[-1]))

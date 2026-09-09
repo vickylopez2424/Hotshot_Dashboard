@@ -1,0 +1,70 @@
+{
+  "CONUS": {
+    "LF2016": {
+      "folder": "Landfire_LF2016",
+      "products": [
+        "FBFM40",
+        "CC",
+        "CH",
+        "CBH",
+        "CBD"
+      ],
+      "complete": true,
+      "ref_year": 2016
+    },
+    "LF2020": {
+      "folder": "Landfire_LF2020",
+      "products": [],
+      "complete": false,
+      "ref_year": 2020
+    },
+    "LF2022": {
+      "folder": "Landfire_LF2022",
+      "products": [
+        "FBFM40",
+        "CC",
+        "CH",
+        "CBH",
+        "CBD"
+      ],
+      "complete": true,
+      "ref_year": 2022
+    },
+    "LF2023": {
+      "folder": "Landfire_LF2023",
+      "products": [
+        "FBFM40",
+        "CC",
+        "CH",
+        "CBH",
+        "CBD"
+      ],
+      "complete": true,
+      "ref_year": 2023
+    },
+    "LF2024": {
+      "folder": "Landfire_LF2024",
+      "products": [
+        "FBFM40",
+        "CC",
+        "CH",
+        "CBH",
+        "CBD"
+      ],
+      "complete": true,
+      "ref_year": 2024
+    },
+    "LF2025": {
+      "folder": "Landfire_LF2025",
+      "products": [
+        "FBFM40",
+        "CC",
+        "CH",
+        "CBH",
+        "CBD"
+      ],
+      "complete": true,
+      "ref_year": 2025
+    }
+  }
+}

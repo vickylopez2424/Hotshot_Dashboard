@@ -41,7 +41,7 @@ fires:
         at: "2018-11-08T22:00:00-08:00"
         confidence: medium
         source: "NIST TN 2135 Table 37 p.195, IMT estimated perimeter at 22:00 on Nov 8 (27,932 ha cumulative), 15.7 h after ignition. No published perimeter exists at exactly 24 h; the next one is end of Nov 9 at 102,985 ac (41,677 ha). The 24 h observed value is therefore a lower bound."
-    progression:
+    progression: &camp_progression
       - {hours: 0.83, at: "07:10", acres: 250, note: "engine reports 200 to 300 ac, rapid spread toward Concow Reservoir", source: "NIST TN 2135 p.91 (TD-028)", confidence: high}
       - {hours: 1.08, at: "07:25", run_km: 5, note: "first structures burning in Concow, 5 km from origin", source: "NIST TN 2135 p.19 and p.176", confidence: high}
       - {hours: 1.40, at: "07:44", run_km: 12, note: "first spot fires in Paradise, 12 km from origin (TN 2252 p.42 says 07:50)", source: "NIST TN 2135 p.19", confidence: high}
@@ -57,6 +57,31 @@ fires:
       Wind-driven (Jarbo Gap north-east winds), single origin plus a second PG&E
       ignition at Rim Rd and Concow Rd at 06:45 that was enveloped (TN 2135 p.91).
       The first 24 h were dominated by long-range spotting, which neither engine models.
+
+  - key: camp2018_ridgewx
+    name: Camp Fire (sensitivity, ridge-cell weather)
+    state: CA
+    ignition: {lat: 39.8104, lon: -121.4347}
+    ignition_time: "2018-11-08T06:20:00-08:00"
+    ignition_source: same as camp2018
+    weather_point:
+      lat: 39.794
+      lon: -121.433
+      label: ridge cell 2 km S of origin, ERA5-Land elevation 840 m, sensitivity variant
+      why: >-
+        SENSITIVITY VARIANT, not the primary benchmark. The ERA5-Land cell at the
+        canyon-floor origin (model elevation 499 m) reports 6.9 mph NNE at ignition
+        fading to under 4 mph, while the neighbouring cell 2 km south (model elevation
+        840 m) reports 22.7 mph from 49 degrees, closer to the Jarbo Gap RAWS. Same
+        ignition, same fuels, only the weather sample point differs.
+    horizons: [6, 12, 24]
+    observed:
+      - {hours: 6, acres: 31267, at: "2018-11-08T12:00:00-08:00", confidence: high, source: "NIST TN 2135 Table 37 p.195 (see camp2018)"}
+      - {hours: 12, acres: 54771, at: "2018-11-08T18:00:00-08:00", confidence: high, source: "NIST TN 2135 Table 37 p.195 (see camp2018)"}
+      - {hours: 24, acres: 69021, at: "2018-11-08T22:00:00-08:00", confidence: medium, source: "NIST TN 2135 Table 37 p.195, 22:00 estimate, lower bound (see camp2018)"}
+    perimeter: {nifc_incident: CAMP, fire_year: "2018", expected_acres: 153336}
+    progression: *camp_progression
+    notes: Weather sensitivity only. Progression table reuses the camp2018 rows.
 
   - key: thomas2017
     name: Thomas Fire
@@ -96,12 +121,15 @@ fires:
   - key: tubbs2017
     name: Tubbs Fire
     state: CA
-    ignition: {lat: 38.6087, lon: -122.5472}
+    ignition: {lat: 38.6131, lon: -122.6204}
     ignition_time: "2017-10-08T21:43:00-07:00"
     ignition_source: >-
       CAL FIRE investigation (2019-01-24): private electrical system at 1128 Bennett
       Lane, Calistoga; started about 21:43 on Oct 8, 2017.
-      https://www.fire.ca.gov/incidents/2017/10/8/tubbs-fire/ Coordinates approximate.
+      https://www.fire.ca.gov/incidents/2017/10/8/tubbs-fire/ Coordinates approximate: Bennett Lane
+      runs north off Tubbs Lane north-west of Calistoga. A first guess of -122.5472 fell 5.2 km
+      east of the NIFC perimeter and was moved to a point 400 m inside the nearest lobe of the NIFC perimeter
+      (an interior point, not the true origin, which may be up to 1.5 km away).
     horizons: [6, 12]
     observed:
       - {hours: 6, acres: 20000, at: "2017-10-09T03:45:00-07:00", confidence: low, source: "fire reached Coffey Park, Santa Rosa (about 19 km) by about 02:00 to 03:00 Oct 9; CAL FIRE reported roughly 20,000 ac by early morning; recalled, verify"}

@@ -97,7 +97,9 @@ def summarize_result(result: dict, lat: float, lon: float, weather_summary: dict
     dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
     compass = dirs[int((bearing + 22.5) // 45) % 8]
     # farthest run from ignition, in miles
-    far = max(Point(x, y).distance(Point(0, 0)) for x, y in poly_m.exterior.coords) / 1609.34
+    # the last ring may be a MultiPolygon when the fire splits; walk every part
+    parts = list(poly_m.geoms) if hasattr(poly_m, "geoms") else [poly_m]
+    far = max(Point(x, y).distance(Point(0, 0)) for part in parts for x, y in part.exterior.coords) / 1609.34
     return {
         "acres_at_horizon": round(acres),
         "horizon_minutes":  last["properties"]["time_minutes"],

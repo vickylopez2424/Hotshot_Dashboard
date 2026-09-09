@@ -57,3 +57,9 @@ backend/data/elmfire_runs/
 backend/data/predict_jobs.db
 frontend/ios/App/build/
 backend/data/packs/
+
+# benchmark caches (re-fetchable); the report and the weather used are kept
+backend/data/benchmarks/packs/
+backend/data/benchmarks/device_runs/
+backend/data/benchmarks/perimeters/
+backend/data/benchmarks/chain.log
