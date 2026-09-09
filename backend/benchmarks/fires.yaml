@@ -1,0 +1,142 @@
+# Historical fires for the spread-engine benchmark (backend/benchmarks/run.py).
+#
+# Every number carries a source. Confidence:
+#   high   read from a document in the local NASA reference RAG (~/nasa_rag), page cited
+#   medium public agency figure, URL cited, not re-read in this session
+#   low    recalled from press coverage of agency updates; treat as approximate until verified
+#
+# Times are local civil time with the UTC offset in force on that date
+# (Pacific: -08:00 PST from early November to mid March, -07:00 PDT otherwise).
+# `observed` rows are the acres to score against at each horizon. `progression`
+# rows (Camp only so far) are the finer hourly reconstruction for the
+# progression table.
+
+fires:
+  - key: camp2018
+    name: Camp Fire
+    state: CA
+    ignition: {lat: 39.8104, lon: -121.4347}
+    ignition_time: "2018-11-08T06:20:00-08:00"
+    ignition_source: >-
+      NIST TN 2135 (Maranghides et al 2021) p.2: "started near Camp Creek Road and
+      Pulga Road in Butte County ... in the Feather River Canyon north of Jarbo Gap,
+      at approximately 06:20 on November 8, 2018. The first report was called in to
+      911 at 06:25." CAL FIRE Camp Incident Green Sheet p.7 gives 6:29 AM near Pulga on
+      Hwy 70. Coordinates are the Poe Dam / Camp Creek Road location (PG&E Caribou-Palermo
+      tower 27/222) and are approximate to a few hundred metres.
+    horizons: [6, 12, 24]
+    observed:
+      - hours: 6
+        acres: 31267
+        at: "2018-11-08T12:00:00-08:00"
+        confidence: high
+        source: "NIST TN 2135 Table 37 p.195, IMT estimated perimeter at 12:00 on Nov 8 (12,653 ha). 5.7 h after ignition."
+      - hours: 12
+        acres: 54771
+        at: "2018-11-08T18:00:00-08:00"
+        confidence: high
+        source: "NIST TN 2135 Table 37 p.195, IR flight perimeter at 18:00 on Nov 8 (22,165 ha cumulative). CAL FIRE Green Sheet p.7: over 55,000 acres and nearly 15 miles downwind in the first 12 hours."
+      - hours: 24
+        acres: 69021
+        at: "2018-11-08T22:00:00-08:00"
+        confidence: medium
+        source: "NIST TN 2135 Table 37 p.195, IMT estimated perimeter at 22:00 on Nov 8 (27,932 ha cumulative), 15.7 h after ignition. No published perimeter exists at exactly 24 h; the next one is end of Nov 9 at 102,985 ac (41,677 ha). The 24 h observed value is therefore a lower bound."
+    progression:
+      - {hours: 0.83, at: "07:10", acres: 250, note: "engine reports 200 to 300 ac, rapid spread toward Concow Reservoir", source: "NIST TN 2135 p.91 (TD-028)", confidence: high}
+      - {hours: 1.08, at: "07:25", run_km: 5, note: "first structures burning in Concow, 5 km from origin", source: "NIST TN 2135 p.19 and p.176", confidence: high}
+      - {hours: 1.40, at: "07:44", run_km: 12, note: "first spot fires in Paradise, 12 km from origin (TN 2252 p.42 says 07:50)", source: "NIST TN 2135 p.19", confidence: high}
+      - {hours: 2.17, at: "08:30", run_km: 12, note: "main fire front reaches Pentz Road, Paradise; 30 spot fires up to 3.4 km into town", source: "NIST TN 2135 p.19", confidence: high}
+      - {hours: 5.67, at: "12:00", acres: 31267, note: "IMT estimated perimeter", source: "NIST TN 2135 Table 37 p.195", confidence: high}
+      - {hours: 11.67, at: "18:00", acres: 54771, note: "IR flight perimeter", source: "NIST TN 2135 Table 37 p.195", confidence: high}
+      - {hours: 12.67, at: "19:00", note: "fire jumps Durham-Pentz Road near Highway 99", source: "NIST TN 2135 p.135", confidence: high}
+      - {hours: 15.0, at: "21:20", run_km: 30, note: "Pulga to Highway 99, 30 km in 15 h, about 0.55 m/s overall", source: "NIST TN 2135 p.180", confidence: high}
+      - {hours: 15.67, at: "22:00", acres: 69021, note: "IMT estimated perimeter", source: "NIST TN 2135 Table 37 p.195", confidence: high}
+      - {hours: 41.67, at: "2018-11-09 24:00", acres: 102985, note: "end of Nov 9 cumulative", source: "NIST TN 2135 Table 37 p.195", confidence: high}
+    perimeter: {nifc_incident: CAMP, fire_year: "2018", expected_acres: 153336}
+    notes: >-
+      Wind-driven (Jarbo Gap north-east winds), single origin plus a second PG&E
+      ignition at Rim Rd and Concow Rd at 06:45 that was enveloped (TN 2135 p.91).
+      The first 24 h were dominated by long-range spotting, which neither engine models.
+
+  - key: thomas2017
+    name: Thomas Fire
+    state: CA
+    ignition: {lat: 34.4136, lon: -119.0836}
+    ignition_time: "2017-12-04T18:26:00-08:00"
+    ignition_source: >-
+      Ventura County Fire Department investigation (released 2019-03-13): SCE lines
+      ignited the fire in Anlauf Canyon above Steckel Park, north of Santa Paula, at
+      6:26 PM on Dec 4, 2017. https://www.fire.ca.gov/incidents/2017/12/4/thomas-fire/
+      Coordinates approximate. A second SCE ignition at Koenigstein Rd (about
+      34.447, -119.186) around 19:00 merged with it; only the first origin is modelled.
+    horizons: [12, 24]
+    observed:
+      - {hours: 12, acres: 31000, at: "2017-12-05T06:30:00-08:00", confidence: low, source: "CAL FIRE Dec 5 2017 morning update as reported in press (about 31,000 ac by dawn); verify against the CAL FIRE incident archive"}
+      - {hours: 24, acres: 65000, at: "2017-12-05T18:30:00-08:00", confidence: low, source: "CAL FIRE Dec 5 2017 evening update as reported in press (about 65,000 ac); verify"}
+    perimeter: {nifc_incident: THOMAS, fire_year: "2017", expected_acres: 281791}
+    notes: Strong Santa Ana (NE) wind event; the first night the fire ran about 20 km to Ventura.
+
+  - key: kincade2019
+    name: Kincade Fire
+    state: CA
+    ignition: {lat: 38.7924, lon: -122.7802}
+    ignition_time: "2019-10-23T21:27:00-07:00"
+    ignition_source: >-
+      CAL FIRE investigation (2020-07-16): PG&E transmission line near Burned Mountain
+      Road and John Kincade Road, north-east of Geyserville; first reported 21:27 on
+      Oct 23, 2019. https://www.fire.ca.gov/incidents/2019/10/23/kincade-fire/
+      Coordinates approximate (The Geysers area).
+    horizons: [10, 24]
+    observed:
+      - {hours: 10, acres: 10000, at: "2019-10-24T07:30:00-07:00", confidence: low, source: "CAL FIRE morning update Oct 24 2019 (10,000 ac) as reported in press; verify"}
+      - {hours: 24, acres: 16000, at: "2019-10-24T21:30:00-07:00", confidence: low, source: "CAL FIRE evening update Oct 24 2019 (16,000 ac) as reported in press; verify"}
+    perimeter: {nifc_incident: KINCADE, fire_year: "2019", expected_acres: 77758}
+    notes: Diablo (NE) wind event, single origin, night ignition. Horizon 10 is scored from the 12 h run's 10 h ring.
+
+  - key: tubbs2017
+    name: Tubbs Fire
+    state: CA
+    ignition: {lat: 38.6087, lon: -122.5472}
+    ignition_time: "2017-10-08T21:43:00-07:00"
+    ignition_source: >-
+      CAL FIRE investigation (2019-01-24): private electrical system at 1128 Bennett
+      Lane, Calistoga; started about 21:43 on Oct 8, 2017.
+      https://www.fire.ca.gov/incidents/2017/10/8/tubbs-fire/ Coordinates approximate.
+    horizons: [6, 12]
+    observed:
+      - {hours: 6, acres: 20000, at: "2017-10-09T03:45:00-07:00", confidence: low, source: "fire reached Coffey Park, Santa Rosa (about 19 km) by about 02:00 to 03:00 Oct 9; CAL FIRE reported roughly 20,000 ac by early morning; recalled, verify"}
+      - {hours: 12, acres: 25000, at: "2017-10-09T09:45:00-07:00", confidence: low, source: "CAL FIRE Oct 9 2017 morning update (about 25,000 ac) as reported in press; verify"}
+    perimeter: {nifc_incident: TUBBS, fire_year: "2017", expected_acres: 36807}
+    notes: Diablo (NE) wind event; the fire crossed Highway 101 into Santa Rosa within about 4 h.
+
+  - key: woolsey2018
+    name: Woolsey Fire
+    state: CA
+    ignition: {lat: 34.2354, lon: -118.7001}
+    ignition_time: "2018-11-08T14:24:00-08:00"
+    ignition_source: >-
+      Los Angeles County After Action Review of the Woolsey Fire (Citygate, 2019) and
+      Ventura County Fire: reported 14:24 on Nov 8, 2018 near the SCE Chatsworth
+      substation on the Santa Susana Field Laboratory.
+      https://www.fire.ca.gov/incidents/2018/11/8/woolsey-fire/ Coordinates approximate.
+    horizons: [12, 24]
+    observed:
+      - {hours: 12, acres: 8000, at: "2018-11-09T02:30:00-08:00", confidence: low, source: "Ventura County Fire overnight update Nov 9 2018 (about 8,000 ac) as reported in press; verify"}
+      - {hours: 24, acres: 14000, at: "2018-11-09T14:30:00-08:00", confidence: low, source: "afternoon Nov 9 2018 figure (about 14,000 ac) recalled from press; the evening figure was 35,000 ac; verify"}
+    perimeter: {nifc_incident: WOOLSEY, fire_year: "2018", expected_acres: 89551}
+    notes: Santa Ana wind event; the fire crossed US 101 about 12 h after ignition.
+
+  - key: carr2018
+    name: Carr Fire
+    state: CA
+    ignition: {lat: 40.6534, lon: -122.6232}
+    ignition_time: "2018-07-23T13:15:00-07:00"
+    ignition_source: >-
+      CAL FIRE: mechanical failure of a vehicle (rim on pavement) at Carr Powerhouse Road
+      and Highway 299 near Whiskeytown, about 13:15 on July 23, 2018.
+      https://www.fire.ca.gov/incidents/2018/7/23/carr-fire/ Coordinates approximate.
+    horizons: [24]
+    observed:
+      - {hours: 24, acres: 1500, at: "2018-07-24T13:15:00-07:00", confidence: low, source: "CAL FIRE Jul 24 2018 update, order of 1,000 to 2,000 ac; recalled, verify. The big wind-driven run into Redding was on Jul 26, day 4."}
+    perimeter: {nifc_incident: CARR, fire_year: "2018", expected_acres: 229651}
+    notes: Not wind-driven in the first 24 h (terrain and heat driven); included as a slow-growth control case.
