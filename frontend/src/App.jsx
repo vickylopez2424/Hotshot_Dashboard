@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, Select } from '@mantine/core';
 import {
   Activity,
@@ -98,6 +99,7 @@ function App() {
         {/* Top navigation bar */}
         <header className="topbar">
           <div className="topbar-brand">
+            <Link to="/" className="back-to-predict" title="Back to the Predict map">&#8592; Predict</Link>
             <span className="brand-mark" aria-hidden="true">H</span>
             <div>
               <h1>Hotshot Dashboard</h1>

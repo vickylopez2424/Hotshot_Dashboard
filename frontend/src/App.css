@@ -449,3 +449,7 @@
     display: none;
   }
 }
+
+/* Way back to the Predict screen from the analyst dashboard */
+.back-to-predict { display: inline-flex; align-items: center; margin-right: 12px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,107,53,.45); color: #ff6b35; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.back-to-predict:hover { background: rgba(255,107,53,.12); }

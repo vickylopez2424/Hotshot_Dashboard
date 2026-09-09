@@ -187,6 +187,17 @@ function FitResult({ result }) {
 export default function PredictPage() {
   const [basemap, setBasemap] = useState('sat');
   const [showBasemaps, setShowBasemaps] = useState(false);
+  const topRef = useRef(null);
+
+  // Layers menu: close on a click anywhere else, or Escape
+  useEffect(() => {
+    if (!showBasemaps) return undefined;
+    const onDown = (e) => { if (topRef.current && !topRef.current.contains(e.target)) setShowBasemaps(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setShowBasemaps(false); };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('pointerdown', onDown, true); document.removeEventListener('keydown', onKey); };
+  }, [showBasemaps]);
   const [locateTick, setLocateTick] = useState(0);
   const [incidents, setIncidents] = useState([]);
   const [incidentsUpdated, setIncidentsUpdated] = useState(null);
@@ -314,7 +325,7 @@ export default function PredictPage() {
       </MapContainer>
 
       {/* Top bar */}
-      <div className="predict-top">
+      <div className="predict-top" ref={topRef}>
         <div className="brand"><span className="brand-symbol"><Flame size={21} strokeWidth={1.8} /></span><span className="brand-name">HOTSHOT<small>FIRE / FIELD MAP</small></span></div>
         <div className="top-actions">
           <a className="icon-btn" href="https://app.watchduty.org" target="_blank" rel="noopener noreferrer" title="Open Watch Duty situational awareness (new tab)" aria-label="Open Watch Duty situational awareness (new tab)"><ExternalLink size={18} /><span>Watch Duty</span></a>
@@ -329,6 +340,8 @@ export default function PredictPage() {
             ))}
             <div className="menu-sep" />
             <button className={showAlerts ? 'on' : ''} onClick={() => setShowAlerts(v => !v)}>Fire weather alerts{alerts?.total_alerts ? ` (${alerts.total_alerts})` : ''}</button>
+            <div className="menu-sep" />
+            <button onClick={() => setShowBasemaps(false)}>Close</button>
           </div>
         )}
       </div>
