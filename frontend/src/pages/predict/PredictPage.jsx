@@ -98,6 +98,40 @@ function WeatherStrip({ periods, activeIndex, onPick }) {
   );
 }
 
+/* Install hint: Android/Chrome expose an install event; iOS needs the Share sheet */
+function InstallHint() {
+  const [state, setState] = useState(() => {
+    try {
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return 'installed';
+      if (localStorage.getItem('hotshot.installHint') === 'dismissed') return 'hidden';
+    } catch { /* storage blocked */ }
+    return 'pending';
+  });
+  const [prompt, setPrompt] = useState(null);
+  useEffect(() => {
+    const onPrompt = (e) => { e.preventDefault(); setPrompt(e); };
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt);
+  }, []);
+  const dismiss = () => { try { localStorage.setItem('hotshot.installHint', 'dismissed'); } catch {} setState('hidden'); };
+  if (state !== 'pending') return null;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  if (!ios && !prompt) return null;
+  return (
+    <div className="install-hint">
+      <img src="/icons/icon-192.png" alt="" />
+      <div className="install-text">
+        <b>Add Hotshot to your home screen</b>
+        {ios
+          ? <span>Tap <span className="share-glyph">⎋</span> Share, then <b>Add to Home Screen</b>. Runs full screen, keeps the last maps offline.</span>
+          : <span>Installs like an app. Runs full screen, keeps the last maps offline.</span>}
+      </div>
+      {!ios && prompt && <button className="install-btn" onClick={async () => { prompt.prompt(); await prompt.userChoice; setPrompt(null); dismiss(); }}>Install</button>}
+      <button className="icon-btn ghost" onClick={dismiss} title="Not now"><X size={16} /></button>
+    </div>
+  );
+}
+
 function fmtAcres(a) {
   if (a == null) return '';
   return a >= 10000 ? `${(a / 1000).toFixed(1)}k` : a.toLocaleString();
@@ -292,6 +326,8 @@ export default function PredictPage() {
           </div>
         )}
       </div>
+
+      <InstallHint />
 
       {/* Sample badge */}
       {phase === 'done' && isSample && (

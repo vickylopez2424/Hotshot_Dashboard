@@ -1,0 +1,11 @@
+# Caddy terminates HTTPS for the API with an automatic Let's Encrypt cert.
+# DNS: A record  api.hotshot.nbtechai.com -> VPS IP
+api.hotshot.nbtechai.com {
+    encode gzip
+    # Private preview until accounts are on: uncomment and set a hashed password
+    # with `caddy hash-password`. Remove once DEMO_MODE=false and Supabase is live.
+    # basic_auth {
+    #     preview JDJhJDE0JC4uLg
+    # }
+    reverse_proxy 127.0.0.1:8000
+}

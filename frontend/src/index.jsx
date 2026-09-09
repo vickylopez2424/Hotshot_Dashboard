@@ -64,3 +64,10 @@ root.render(
     </MantineProvider>
   </React.StrictMode>
 );
+
+// Installable app: register the service worker (offline shell + map tiles).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('service worker failed', err));
+  });
+}

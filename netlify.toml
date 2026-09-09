@@ -1,0 +1,32 @@
+# Front end on Netlify. The API lives on the VPS behind Caddy (see deploy/).
+# /api/* is proxied server-side so the app keeps using relative URLs and the
+# service worker, geolocation and install prompt all see one HTTPS origin.
+[build]
+  base    = "frontend"
+  publish = "build"
+  command = "CI=true GENERATE_SOURCEMAP=false npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://api.hotshot.nbtechai.com/api/:splat"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
