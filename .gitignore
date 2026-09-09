@@ -56,3 +56,4 @@ backend/data/elmfire_outputs/predict_*/
 backend/data/elmfire_runs/
 backend/data/predict_jobs.db
 frontend/ios/App/build/
+backend/data/packs/

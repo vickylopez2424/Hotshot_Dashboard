@@ -211,3 +211,26 @@
 }
 .predict .sw.wind { background: #638398; }
 .predict .sw.rh { background: #9b6d23; }
+
+/* offline controls in the Layers menu */
+.menu-title { display: flex; align-items: center; gap: 6px; padding: 6px 12px 2px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; opacity: .8; }
+.menu-hint { padding: 2px 12px 6px; font-size: 12px; line-height: 1.35; opacity: .75; max-width: 260px; }
+.menu-hint.warn { color: #a83e20; opacity: 1; }
+.km-chips { display: flex; gap: 6px; padding: 4px 12px; }
+.km-chips button { flex: 1; padding: 7px 0; font-size: 13px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15); background: transparent; text-align: center; }
+.km-chips button.on { background: #a83e20; color: #fff; border-color: #a83e20; }
+.pack-download { display: flex !important; align-items: center; gap: 8px; margin: 4px 12px 6px; padding: 10px 12px !important; border-radius: 8px !important; background: #202824 !important; color: #fff !important; font-weight: 700 !important; }
+.pack-download:disabled { opacity: .5; }
+.pack-list { display: flex; flex-direction: column; gap: 4px; padding: 0 8px 4px; }
+.pack-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 8px; border-radius: 8px; background: rgba(0,0,0,.05); font-size: 13px; }
+.pack-row small { display: block; font-size: 11px; opacity: .7; }
+.offline-badge { position: absolute; z-index: 900; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top)); display: flex; gap: 6px; align-items: center;
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: #202824; border: 1px solid #596258; box-shadow: 0 6px 18px rgba(0,0,0,.4); white-space: nowrap; }
+.sample-badge.device { background: #202824; color: #fff; top: calc(100px + env(safe-area-inset-top)); }
+.rerun-btn { margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: 1px solid #a83e20; background: transparent; color: #a83e20; font-weight: 700; font-size: 14px; cursor: pointer; }
+@media (min-width: 900px) { .offline-badge { top: auto; bottom: 22px; left: auto; right: 22px; transform: none; } .sample-badge.device { top: auto; bottom: 60px; left: auto; right: 22px; transform: none; } }
+/* the Layers menu must sit above the sheet and scroll on a phone */
+.predict .basemap-menu { z-index: 1200; max-height: calc(100dvh - 96px - env(safe-area-inset-top)); overflow-y: auto; overscroll-behavior: contain; }
+.predict .predict-top { z-index: 1100; }
+.predict .menu-title, .predict .menu-hint, .predict .pack-row, .predict .km-chips button { color: var(--field-ink, #252b28); }
+.predict .menu-hint { opacity: .85; }

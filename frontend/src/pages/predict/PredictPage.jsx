@@ -16,9 +16,12 @@ import L from 'leaflet';
 import axios from 'axios';
 import {
   Flame, Wind, Droplets, Thermometer, Crosshair, Layers, LocateFixed,
-  ChevronRight, Compass, Ruler, X, LayoutDashboard, AlertTriangle, Clock, ExternalLink,
+  ChevronRight, Compass, Ruler, X, LayoutDashboard, AlertTriangle, Clock,
+  Download, WifiOff, Trash2, RefreshCw, CheckCircle2, ExternalLink,
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+import { fetchPack, fetchPackEstimate, listPacks, deletePack, getPackCovering, savePackWeather, saveSnapshot, getSnapshot, hasDecompression } from '../../engine/pack.js';
+import { predictOnDevice } from '../../engine/spread.js';
 import './PredictPage.css';
 
 const HORIZONS = [6, 12, 24];
@@ -183,6 +186,90 @@ function FitResult({ result }) {
   return null;
 }
 
+/* Offline helpers ------------------------------------------------------ */
+const PACK_SIZES = [20, 30, 40];
+const COMPASS8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+const toRad = (d) => d * Math.PI / 180;
+
+function haversineMi(lon1, lat1, lon2, lat2) {
+  const R = 3958.8, dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function bearingDeg(lon1, lat1, lon2, lat2) {
+  const y = Math.sin(toRad(lon2 - lon1)) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lon2 - lon1));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+function ringCoords(geom) {
+  if (!geom) return [];
+  if (geom.type === 'Polygon') return geom.coordinates[0] || [];
+  if (geom.type === 'MultiPolygon') return geom.coordinates.flatMap(p => p[0] || []);
+  return [];
+}
+
+/* Same numbers the server derives, computed from the forecast periods */
+function summarizePeriods(periods) {
+  if (!periods?.length) return {};
+  const peak = periods.reduce((a, b) => (b.wind_mph > a.wind_mph ? b : a), periods[0]);
+  const withRh = periods.filter(p => p.rh_pct != null);
+  const driest = withRh.length ? withRh.reduce((a, b) => (b.rh_pct < a.rh_pct ? b : a), withRh[0]) : null;
+  return {
+    now_wind_mph: periods[0].wind_mph, now_wind_dir: periods[0].wind_dir, now_temp_f: periods[0].temp_f, now_rh_pct: periods[0].rh_pct,
+    peak_wind_mph: peak.wind_mph, peak_wind_dir: peak.wind_dir, peak_wind_time: peak.time, min_rh_pct: driest ? driest.rh_pct : null,
+  };
+}
+
+/* Three numbers for an on-device result, mirroring the server summary */
+function summarizeDevice(result, lon, lat, wxSummary) {
+  const feats = result?.features || [];
+  if (!feats.length) return null;
+  const last = feats[feats.length - 1];
+  const coords = ringCoords(last.geometry);
+  let cx = 0, cy = 0, far = 0;
+  coords.forEach(([x, y]) => { cx += x; cy += y; far = Math.max(far, haversineMi(lon, lat, x, y)); });
+  cx /= coords.length || 1; cy /= coords.length || 1;
+  const b = bearingDeg(lon, lat, cx, cy);
+  return {
+    acres_at_horizon: Math.round(result.run?.acres_at_horizon ?? last.properties.acres ?? 0),
+    horizon_minutes: last.properties.time_minutes, spread_bearing: Math.round(b),
+    spread_dir: COMPASS8[Math.round(b / 45) % 8], max_run_miles: Math.round(far * 100) / 100,
+    wind_mph: wxSummary?.now_wind_mph, wind_dir: wxSummary?.now_wind_dir, peak_wind_mph: wxSummary?.peak_wind_mph,
+    min_rh_pct: wxSummary?.min_rh_pct, source: 'ondevice',
+  };
+}
+
+/* Warm the service worker tile cache for a pack's area (z10 to z14) */
+async function prefetchTiles(urlTemplate, bounds, onProgress) {
+  const tiles = [];
+  for (let z = 10; z <= 14; z++) {
+    const n = 2 ** z;
+    const tx = (lon) => Math.floor((lon + 180) / 360 * n);
+    const ty = (lat) => Math.floor((1 - Math.log(Math.tan(toRad(lat)) + 1 / Math.cos(toRad(lat))) / Math.PI) / 2 * n);
+    for (let x = tx(bounds.west); x <= tx(bounds.east); x++) for (let y = ty(bounds.north); y <= ty(bounds.south); y++) tiles.push({ z, x, y });
+  }
+  const list = tiles.slice(0, 1200);
+  let done = 0;
+  const worker = async () => {
+    while (list.length) {
+      const t = list.shift();
+      const url = urlTemplate.replace('{z}', t.z).replace('{x}', t.x).replace('{y}', t.y).replace('{s}', 'a');
+      try { await fetch(url, { mode: 'no-cors' }); } catch { /* offline or blocked, keep going */ }
+      done += 1; onProgress?.(done, tiles.length);
+    }
+  };
+  await Promise.all([0, 1, 2, 3, 4, 5].map(worker));
+  return tiles.length;
+}
+
+function CenterWatch({ onMove }) {
+  const map = useMapEvents({ moveend() { const c = map.getCenter(); onMove({ lat: c.lat, lon: c.lng }); } });
+  return null;
+}
+
+const ageText = (h) => (h == null ? '' : h < 1 ? 'just now' : h < 48 ? `${Math.round(h)}h old` : `${Math.round(h / 24)}d old`);
+const isNetworkError = (e) => !e?.response || e.code === 'ERR_NETWORK' || e.message === 'Network Error';
+
 /* Page ------------------------------------------------------------------ */
 export default function PredictPage() {
   const [basemap, setBasemap] = useState('sat');
@@ -215,25 +302,62 @@ export default function PredictPage() {
   const [timeMin, setTimeMin] = useState(null);
   const pollRef = useRef(null);
 
+  // Offline: connectivity, downloaded packs, which engine produced the result
+  const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
+  const [packs, setPacks] = useState([]);
+  const [packKm, setPackKm] = useState(30);
+  const [packEstimate, setPackEstimate] = useState(null);
+  const [packBusy, setPackBusy] = useState(null);        // {label, fraction}
+  const [packMsg, setPackMsg] = useState(null);
+  const [engineUsed, setEngineUsed] = useState('server'); // server | device
+  const [coveringPack, setCoveringPack] = useState(null);
+  const [mapCenter, setMapCenter] = useState({ lat: DEFAULT_CENTER[0], lon: DEFAULT_CENTER[1] });
+  const refreshPacks = useCallback(() => listPacks().then(setPacks).catch(() => setPacks([])), []);
+  useEffect(() => {
+    const up = () => setOnline(true), down = () => setOnline(false);
+    window.addEventListener('online', up); window.addEventListener('offline', down);
+    refreshPacks();
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); };
+  }, [refreshPacks]);
+  useEffect(() => {
+    if (!showBasemaps || !online) return;
+    fetchPackEstimate(packKm).then(setPackEstimate).catch(() => setPackEstimate(null));
+  }, [showBasemaps, packKm, online]);
+
   // Incidents on the map
   useEffect(() => {
     axios.get('/api/wildcad/incidents/map', { params: { min_acres: 1 } })
-      .then(r => { setIncidents(r.data.features || []); setIncidentsUpdated(new Date()); })
-      .catch(() => setIncidents([]));
+      .then(r => { setIncidents(r.data.features || []); setIncidentsUpdated(new Date()); saveSnapshot('incidents', { features: r.data.features || [], at: Date.now() }).catch(() => {}); })
+      .catch(() => getSnapshot('incidents').then(snap => { if (snap?.features) { setIncidents(snap.features); setIncidentsUpdated(new Date(snap.at)); } }).catch(() => setIncidents([])));
   }, []);
 
   // Fire weather alerts (red flag warnings, watches) as zone polygons
   useEffect(() => {
-    axios.get('/api/nws/alerts/map').then(r => setAlerts(r.data)).catch(() => setAlerts(null));
+    axios.get('/api/nws/alerts/map')
+      .then(r => { setAlerts(r.data); saveSnapshot('alerts', r.data).catch(() => {}); })
+      .catch(() => getSnapshot('alerts').then(a => setAlerts(a || null)).catch(() => setAlerts(null)));
   }, []);
 
   // Weather line when a point is picked or the horizon changes
   useEffect(() => {
     if (!pick) return;
     setWeather(null); setWeatherErr(null);
+    let cancelled = false;
+    getPackCovering(pick.lon, pick.lat).then(pk => { if (!cancelled) setCoveringPack(pk); }).catch(() => setCoveringPack(null));
+    const fromPack = async (why) => {
+      const pk = await getPackCovering(pick.lon, pick.lat);
+      const periods = pk?.weather?.periods;
+      if (!periods?.length) throw new Error(why);
+      const ageH = pk.weather.saved_at ? (Date.now() - pk.weather.saved_at) / 36e5 : null;
+      return { summary: summarizePeriods(periods.slice(0, hours)), periods: periods.slice(0, hours), source: `stored forecast, ${ageText(ageH)}`, stored: true, age_hours: ageH };
+    };
     axios.get('/api/predict/weather', { params: { lat: pick.lat, lon: pick.lon, hours } })
-      .then(r => setWeather(r.data))
-      .catch(e => setWeatherErr(e.response?.data?.detail || 'Weather unavailable'));
+      .then(r => { if (!cancelled) setWeather(r.data); })
+      .catch(e => {
+        const why = e.response?.data?.detail || (isNetworkError(e) ? 'No signal and no stored forecast for this point.' : 'Weather unavailable');
+        fromPack(why).then(w => { if (!cancelled) setWeather(w); }).catch(() => { if (!cancelled) setWeatherErr(why); });
+      });
+    return () => { cancelled = true; };
   }, [pick?.lat, pick?.lon, hours]);
 
   const onPick = useCallback((p) => {
@@ -248,8 +372,32 @@ export default function PredictPage() {
     setJob(null); setPick(null); setWeather(null); setPhase('idle'); setTimeMin(null);
   };
 
+  const runOnDevice = async () => {
+    setPhase('running'); setJob({ step: 'Loading offline pack' });
+    try {
+      const pk = coveringPack || await getPackCovering(pick.lon, pick.lat);
+      if (!pk) throw new Error('No offline pack covers this point. Download this area from Layers while you have signal.');
+      const wxObj = weather?.periods?.length ? weather : (pk.weather?.periods ? { periods: pk.weather.periods } : null);
+      if (!wxObj) throw new Error('No forecast stored with this pack. Reconnect once to refresh it.');
+      setJob({ step: 'Running on this device' });
+      await new Promise(r => setTimeout(r, 30)); // let the spinner paint
+      const result = predictOnDevice(pk, wxObj, [pick.lon, pick.lat], hours, () => {});
+      const wxSum = weather?.summary || summarizePeriods(wxObj.periods);
+      const summary = summarizeDevice(result, pick.lon, pick.lat, wxSum);
+      if (!summary) throw new Error('The fire did not spread from this point on the stored fuels. Try tapping nearby brush, grass or timber.');
+      setEngineUsed('device');
+      setJob({ status: 'done', step: 'Done', result, summary, engine: 'device', pack: { key: pk.key, ageHours: pk.ageHours, weatherAgeHours: weather?.age_hours ?? null } });
+      setPhase('done');
+      setTimeMin(Math.max(0, ...result.features.map(f => f.properties.time_minutes)));
+    } catch (e) {
+      setPhase('error'); setJob({ status: 'failed', error: e.message });
+    }
+  };
+
   const run = async () => {
     if (!pick) return;
+    if (!online) return runOnDevice();
+    setEngineUsed('server');
     setPhase('running'); setJob({ step: 'Queued' });
     try {
       const r = await axios.post('/api/predict', {
@@ -269,7 +417,33 @@ export default function PredictPage() {
         } catch { /* keep polling */ }
       }, 1200);
     } catch (e) {
+      if (isNetworkError(e)) return runOnDevice();
       setPhase('error'); setJob({ status: 'failed', error: e.response?.data?.detail || e.message });
+    }
+  };
+
+  const downloadPack = async () => {
+    const at = pick || mapCenter;
+    if (!hasDecompression()) { setPackMsg('This browser cannot unpack offline data. Use Safari 16.4 or newer, or Chrome.'); return; }
+    setPackMsg(null);
+    try {
+      setPackBusy({ label: 'Downloading fuels and terrain', fraction: 0 });
+      const pk = await fetchPack(at.lat, at.lon, packKm, { save: true, onProgress: (got, total) => setPackBusy({ label: 'Downloading fuels and terrain', fraction: total ? got / total : 0 }) });
+      setPackBusy({ label: 'Saving 48 h forecast', fraction: 1 });
+      try {
+        const w = (await axios.get('/api/predict/weather', { params: { lat: at.lat, lon: at.lon, hours: 48 } })).data;
+        await savePackWeather(pk.key, { ...w, saved_at: Date.now() });
+      } catch { /* pack still usable with a forecast fetched later */ }
+      setPackBusy({ label: 'Caching map tiles', fraction: 0 });
+      const saved = (await listPacks()).find(x => x.key === pk.key);
+      if (saved?.bounds) await prefetchTiles(BASEMAPS[basemap].url, saved.bounds, (d, t) => setPackBusy({ label: 'Caching map tiles', fraction: d / t }));
+      setPackMsg(`Saved ${packKm} km around ${at.lat.toFixed(3)}, ${at.lon.toFixed(3)}. Works with no signal for 48 h.`);
+      refreshPacks();
+      if (pick) getPackCovering(pick.lon, pick.lat).then(setCoveringPack).catch(() => {});
+    } catch (e) {
+      setPackMsg(`Download failed: ${e.message}`);
+    } finally {
+      setPackBusy(null);
     }
   };
 
@@ -294,6 +468,7 @@ export default function PredictPage() {
     <div className="predict">
       <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} minZoom={4} zoomControl={false} className="predict-map" attributionControl={false}>
         <ZoomWatch onZoom={setZoom} />
+        <CenterWatch onMove={setMapCenter} />
         <TileLayer key={basemap} url={BASEMAPS[basemap].url} maxZoom={BASEMAPS[basemap].maxZoom} />
         <MapEvents onPick={onPick} disabled={phase === 'running'} />
         <FlyTo target={pick} />
@@ -341,6 +516,30 @@ export default function PredictPage() {
             <div className="menu-sep" />
             <button className={showAlerts ? 'on' : ''} onClick={() => setShowAlerts(v => !v)}>Fire weather alerts{alerts?.total_alerts ? ` (${alerts.total_alerts})` : ''}</button>
             <div className="menu-sep" />
+            <div className="menu-title"><WifiOff size={13} /> Offline</div>
+            <div className="menu-hint">Save fuels, terrain, forecast and tiles for an area so predictions run on this phone with no signal.</div>
+            <div className="km-chips">
+              {PACK_SIZES.map(k => <button key={k} className={packKm === k ? 'on' : ''} disabled={!!packBusy} onClick={() => setPackKm(k)}>{k} km</button>)}
+            </div>
+            <button className="pack-download" disabled={!online || !!packBusy} onClick={downloadPack}>
+              <Download size={15} /> {packBusy ? `${packBusy.label} ${Math.round(packBusy.fraction * 100)}%` : `Download ${pick ? 'around the ignition point' : 'this area'}${packEstimate?.bytes_gzip_estimate ? ` · ${(packEstimate.bytes_gzip_estimate / 1048576).toFixed(0)} MB` : ''}`}
+            </button>
+            {!online && <div className="menu-hint warn">No signal. Downloads need a connection.</div>}
+            {packMsg && <div className="menu-hint">{packMsg}</div>}
+            {packs.length > 0 && (
+              <div className="pack-list">
+                {packs.map(pk => (
+                  <div key={pk.key} className="pack-row">
+                    <div>
+                      <b>{pk.km} km</b> · {pk.center.lat.toFixed(2)}, {pk.center.lon.toFixed(2)}
+                      <small>{(pk.bytes / 1048576).toFixed(1)} MB · {ageText(pk.ageHours)}{pk.hasWeather ? ` · forecast ${ageText(pk.weatherAgeHours)}` : ' · no forecast'}</small>
+                    </div>
+                    <button className="icon-btn ghost" title="Delete pack" onClick={() => deletePack(pk.key).then(refreshPacks)}><Trash2 size={15} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="menu-sep" />
             <button onClick={() => setShowBasemaps(false)}>Close</button>
           </div>
         )}
@@ -359,6 +558,12 @@ export default function PredictPage() {
       {/* Sample badge */}
       {phase === 'done' && isSample && (
         <div className="sample-badge"><AlertTriangle size={14} /> Sample shape. Spread model not connected yet.</div>
+      )}
+      {!online && (
+        <div className="offline-badge"><WifiOff size={14} /> No signal{coveringPack ? ' · offline pack covers this point' : packs.length ? ' · tap inside a downloaded area' : ' · no offline packs saved'}</div>
+      )}
+      {phase === 'done' && engineUsed === 'device' && (
+        <div className="sample-badge device"><CheckCircle2 size={14} /> Offline estimate · on-device model{job?.pack?.weatherAgeHours != null ? ` · forecast ${ageText(job.pack.weatherAgeHours)}` : ''}</div>
       )}
 
       {/* Bottom sheet */}
@@ -478,7 +683,17 @@ export default function PredictPage() {
             </div>
             <WeatherStrip periods={periods} activeIndex={activeHour} onPick={i => setTimeMin(Math.min((i + 1) * 60, lastContourMinute))} />
 
-            {runInfo && (
+            {engineUsed === 'device' && runInfo && (
+              <div className="run-meta">
+                <span>ON-DEVICE</span><span>Rothermel surface fire</span><span>30 m cells</span><span>{runInfo.elapsed_ms != null ? `${Math.round(runInfo.elapsed_ms)} ms` : ''}</span>
+                {runInfo.ignition_snap_m > 0 && <span className="warn">ignition moved {Math.round(runInfo.ignition_snap_m)} m to burnable fuel</span>}
+                <span className="warn">no crown fire or spotting</span>
+              </div>
+            )}
+            {engineUsed === 'device' && online && (
+              <button className="rerun-btn" onClick={run}><RefreshCw size={15} /> Re-run on the server model (ELMFIRE)</button>
+            )}
+            {engineUsed !== 'device' && runInfo && (
               <div className="run-meta">
                 <span>ELMFIRE</span><span>{runInfo.landfire_version?.split(' ')[0] || 'LANDFIRE'} fuels</span><span>{runInfo.cell_size_m} m cells</span><span>{runInfo.domain_km} km domain</span><span>{runInfo.model_s != null ? `${runInfo.model_s}s` : ''}</span>
                 {runInfo.ignition_snap_m > 0 && <span className="warn">ignition moved {Math.round(runInfo.ignition_snap_m)} m to burnable fuel</span>}

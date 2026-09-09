@@ -25,6 +25,7 @@ from integrations.predict.engines import ENGINES, EngineUnavailable, summarize_r
 from integrations.predict.elmfire_pipeline import NoSpread
 
 router = APIRouter()
+from integrations.predict.pack import router as pack_router; router.include_router(pack_router)  # /pack must register before /{job_id}
 logger = logging.getLogger(__name__)
 jobs.init()
 

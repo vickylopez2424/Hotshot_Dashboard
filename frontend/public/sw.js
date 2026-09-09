@@ -3,11 +3,11 @@
  * - Map tiles: cache first, capped, so the last areas viewed still draw with no signal.
  * - API: network only, with a cached copy of the last incidents/alerts as a fallback.
  */
-const VERSION = 'hotshot-v1';
+const VERSION = 'hotshot-v2';
 const SHELL = `${VERSION}-shell`;
 const TILES = `${VERSION}-tiles`;
 const API = `${VERSION}-api`;
-const TILE_LIMIT = 1500;
+const TILE_LIMIT = 4000;
 const TILE_HOSTS = ['server.arcgisonline.com', 'basemap.nationalmap.gov', 'tile.openstreetmap.org'];
 
 self.addEventListener('install', (e) => {
@@ -34,7 +34,8 @@ self.addEventListener('fetch', (e) => {
       if (hit) return hit;
       try {
         const res = await fetch(e.request);
-        if (res.ok) { c.put(e.request, res.clone()); trimCache(TILES, TILE_LIMIT); }
+        // tile hosts answer without CORS headers, so the response is opaque (status 0); cache it anyway
+        if (res.ok || res.type === 'opaque') { c.put(e.request, res.clone()); trimCache(TILES, TILE_LIMIT); }
         return res;
       } catch { return hit || Response.error(); }
     }));
